@@ -1,4 +1,4 @@
-# Move Integer Modules
+# Move Integers
 
 ⚠️ **WARNING: These Move modules have not been audited. Use with caution in production environments. The authors are not responsible for any potential issues or vulnerabilities.** ⚠️
 
@@ -23,13 +23,11 @@ Each module provides basic arithmetic operations and comparisons for its respect
 
 To use these modules in your Move project, you can import them as follows:
 
-```rust
+```move
 use 0xfff3b2d7c65b54bd8643cf5b66a7aaf8461d0a533fce0dd88684b0acdc5e3fff::i64;
 use 0xfff3b2d7c65b54bd8643cf5b66a7aaf8461d0a533fce0dd88684b0acdc5e3fff::i128;
 // ... and so on for other modules
 ```
-
-Replace `<your_address>` with the appropriate address where you've deployed these modules.
 
 ## Testing
 
