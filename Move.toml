@@ -1,0 +1,16 @@
+[package]
+name = "MoveIntegers"
+version = "1.0.0"
+authors = ["0xAnto"]
+description = "WARNING: Unaudited modules. Use with caution in production."
+
+
+[addresses]
+move_int = "0xe1f58fe2eeb40bb4710813412e655c3ba7a6efb9cc8faea065aa1f81f63e655b"
+
+[dependencies.AptosFramework]
+git = "https://github.com/aptos-labs/aptos-core.git"
+rev = "mainnet"
+subdir = "aptos-move/framework/aptos-framework"
+
+[dev-dependencies]
