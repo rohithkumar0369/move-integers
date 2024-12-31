@@ -1,6 +1,6 @@
 # Move Integers
 
-⚠️ **WARNING: These Move modules have not been audited. Use with caution in production environments. The authors are not responsible for any potential issues or vulnerabilities.** ⚠️
+⚠️ **WARNING: These Move modules has not been audited. Use with caution in production environments. The authors are not responsible for any potential issues or vulnerabilities.** ⚠️
 
 ## Overview
 
@@ -48,6 +48,8 @@ This project drew inspiration from the Integer Mate repository by Cetus Protocol
 ## License
 
 This project is licensed under the MIT License.
+
+Antony Ranjith F
 
 ## Contact
 
