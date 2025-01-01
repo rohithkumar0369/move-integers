@@ -53,6 +53,19 @@ Antony Ranjith F
 
 ## Contact
 
-For questions or concerns, you can reach out to the maintainer on Twitter: [@0xanto](https://twitter.com/0xanto)
+For questions or concerns, you can reach out to the maintainer on Twitter: [@0xAnto](https://twitter.com/0xanto)
 
 Remember to use these modules responsibly and consider a thorough audit before deploying them in any production environment.
+
+## Move Coverage Summary
+
+| Module                                                                 | Coverage (%) |
+|------------------------------------------------------------------------|--------------|
+| fff3b2d7c65b54bd8643cf5b66a7aaf8461d0a533fce0dd88684b0acdc5e3fff::i128 | 100.00       |
+| fff3b2d7c65b54bd8643cf5b66a7aaf8461d0a533fce0dd88684b0acdc5e3fff::i16  | 100.00       |
+| fff3b2d7c65b54bd8643cf5b66a7aaf8461d0a533fce0dd88684b0acdc5e3fff::i256 | 100.00       |
+| fff3b2d7c65b54bd8643cf5b66a7aaf8461d0a533fce0dd88684b0acdc5e3fff::i32  | 100.00       |
+| fff3b2d7c65b54bd8643cf5b66a7aaf8461d0a533fce0dd88684b0acdc5e3fff::i64  | 100.00       |
+| fff3b2d7c65b54bd8643cf5b66a7aaf8461d0a533fce0dd88684b0acdc5e3fff::i8   | 100.00       |
+| **Overall Move Coverage**                                              | **100.00%**  |
+
