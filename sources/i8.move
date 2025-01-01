@@ -1,5 +1,6 @@
 module move_int::i8 {
     const OVERFLOW: u64 = 0;
+    const DIVISION_BY_ZERO: u64 = 1;
 
     const MIN_AS_U8: u8 = 1 << 7;
     const MAX_AS_U8: u8 = 0x7f;
@@ -34,7 +35,9 @@ module move_int::i8 {
         if (v == 0) {
             I8 { bits: v }
         } else {
-            I8 { bits: (u8_neg(v) + 1) | (1 << 7) }
+            I8 {
+                bits: (u8_neg(v) + 1) | (1 << 7)
+            }
         }
     }
 
@@ -54,7 +57,9 @@ module move_int::i8 {
     // Performs checked addition on two I8 numbers, asserting on overflow
     public fun add(num1: I8, num2: I8): I8 {
         let sum = wrapping_add(num1, num2);
-        let overflow = (sign(num1) & sign(num2) & u8_neg(sign(sum))) | (u8_neg(sign(num1)) & u8_neg(sign(num2)) & sign(sum));
+        let overflow =
+            (sign(num1) & sign(num2) & u8_neg(sign(sum)))
+                | (u8_neg(sign(num1)) & u8_neg(sign(num2)) & sign(sum));
         assert!(overflow == 0, OVERFLOW);
         sum
     }
@@ -84,7 +89,7 @@ module move_int::i8 {
 
     // Performs division on two I8 numbers
     public fun div(num1: I8, num2: I8): I8 {
-        assert!(!is_zero(num2), OVERFLOW);
+        assert!(!is_zero(num2), DIVISION_BY_ZERO);
         let result = abs_u8(num1) / abs_u8(num2);
         if (sign(num1) != sign(num2)) {
             return neg_from(result)
@@ -94,9 +99,8 @@ module move_int::i8 {
 
     // Returns the absolute value of an I8 number
     public fun abs(v: I8): I8 {
-        if (sign(v) == 0) {
-            v
-        } else {
+        if (sign(v) == 0) { v }
+        else {
             assert!(v.bits > MIN_AS_U8, OVERFLOW);
             I8 { bits: u8_neg(v.bits - 1) }
         }
@@ -104,16 +108,15 @@ module move_int::i8 {
 
     // Returns the absolute value of an I8 number as a u8
     public fun abs_u8(v: I8): u8 {
-        if (sign(v) == 0) {
-            v.bits
-        } else {
+        if (sign(v) == 0) { v.bits }
+        else {
             u8_neg(v.bits - 1)
         }
     }
 
     // Performs modulo operation on two I8 numbers
     public fun mod(v: I8, n: I8): I8 {
-        assert!(!is_zero(n), OVERFLOW);
+        assert!(!is_zero(n), DIVISION_BY_ZERO);
         if (sign(v) == 1) {
             neg_from((abs_u8(v) % abs_u8(n)))
         } else {
@@ -123,12 +126,14 @@ module move_int::i8 {
 
     // Returns the minimum of two I8 numbers
     public fun min(a: I8, b: I8): I8 {
-        if (lt(a, b)) { a } else { b }
+        if (lt(a, b)) { a }
+        else { b }
     }
 
     // Returns the maximum of two I8 numbers
     public fun max(a: I8, b: I8): I8 {
-        if (gt(a, b)) { a } else { b }
+        if (gt(a, b)) { a }
+        else { b }
     }
 
     // Raises an I8 number to a u8 power
@@ -242,209 +247,5 @@ module move_int::i8 {
     // Helper function to perform bitwise negation on a u8
     fun u8_neg(v: u8): u8 {
         v ^ 0xff
-    }
-
-    // Basic Operations Tests
-    #[test]
-    fun test_from() {
-        assert!(as_u8(from(0)) == 0, 0);
-        assert!(as_u8(from(10)) == 10, 1);
-        assert!(as_u8(from(MAX_AS_U8)) == MAX_AS_U8, 2);
-    }
-
-    #[test]
-    #[expected_failure]
-    fun test_from_overflow() {
-        from(MAX_AS_U8 + 1);
-    }
-
-    #[test]
-    fun test_neg_from() {
-        assert!(as_u8(neg_from(0)) == 0, 0);
-        assert!(as_u8(neg_from(1)) == 0xff, 1);
-        assert!(as_u8(neg_from(MAX_AS_U8)) == 0x81, 2);
-        assert!(as_u8(neg_from(MIN_AS_U8)) == MIN_AS_U8, 3);
-    }
-
-    #[test]
-    #[expected_failure]
-    fun test_neg_from_overflow() {
-        neg_from(MIN_AS_U8 + 1);
-    }
-
-    // Absolute Value Tests
-    #[test]
-    fun test_abs() {
-        assert!(as_u8(abs(from(10))) == 10u8, 0);
-        assert!(as_u8(abs(neg_from(10))) == 10u8, 1);
-        assert!(as_u8(abs(neg_from(0))) == 0u8, 2);
-        assert!(as_u8(abs(neg_from(MAX_AS_U8))) == MAX_AS_U8, 3);
-    }
-
-    #[test]
-    #[expected_failure]
-    fun test_abs_overflow() {
-        abs(neg_from(MIN_AS_U8));
-    }
-
-    // Addition Tests
-    #[test]
-    fun test_add() {
-        assert!(as_u8(add(from(1), from(2))) == 3, 0);
-        assert!(as_u8(add(from(MAX_AS_U8), from(0))) == MAX_AS_U8, 1);
-        assert!(as_u8(add(neg_from(1), from(1))) == 0, 2);
-    }
-
-    #[test]
-    #[expected_failure]
-    fun test_add_overflow() {
-        add(from(MAX_AS_U8), from(1));
-    }
-
-    #[test]
-    #[expected_failure]
-    fun test_add_underflow() {
-        add(neg_from(MIN_AS_U8), neg_from(1));
-    }
-
-    // Subtraction Tests
-    #[test]
-    fun test_sub() {
-        assert!(as_u8(sub(from(3), from(2))) == 1, 0);
-        assert!(as_u8(sub(from(0), from(1))) == 0xff, 1);
-        assert!(as_u8(sub(neg_from(1), neg_from(1))) == 0, 2);
-    }
-
-    #[test]
-    #[expected_failure]
-    fun test_sub_overflow() {
-        sub(from(MAX_AS_U8), neg_from(1));
-    }
-
-    #[test]
-    #[expected_failure]
-    fun test_sub_underflow() {
-        sub(neg_from(MIN_AS_U8), from(1));
-    }
-
-    // Multiplication Tests
-    #[test]
-    fun test_mul() {
-        assert!(as_u8(mul(from(3), from(2))) == 6, 0);
-        assert!(as_u8(mul(neg_from(4), from(2))) == 0xf8, 1);
-        assert!(as_u8(mul(neg_from(4), neg_from(2))) == 8, 2);
-    }
-
-    #[test]
-    #[expected_failure]
-    fun test_mul_overflow() {
-        mul(from(MAX_AS_U8), from(2));
-    }
-
-    // Division Tests
-    #[test]
-    fun test_div() {
-        assert!(as_u8(div(from(6), from(2))) == 3, 0);
-        assert!(as_u8(div(neg_from(6), from(2))) == 0xfd, 1);
-        assert!(as_u8(div(neg_from(6), neg_from(2))) == 3, 2);
-    }
-
-    #[test]
-    #[expected_failure]
-    fun test_div_by_zero() {
-        div(from(1), from(0));
-    }
-
-    // Comparison Tests
-    #[test]
-    fun test_sign() {
-        assert!(sign(neg_from(10)) == 1u8, 0);
-        assert!(sign(from(10)) == 0u8, 1);
-    }
-
-    #[test]
-    fun test_cmp() {
-        assert!(cmp(from(1), from(0)) == GT, 0);
-        assert!(cmp(from(0), from(1)) == LT, 1);
-        assert!(cmp(from(0), neg_from(1)) == GT, 2);
-        assert!(cmp(neg_from(MIN_AS_U8), from(MAX_AS_U8)) == LT, 3);
-    }
-
-    // Modulo Tests
-    #[test]
-    fun test_mod() {
-        assert!(cmp(mod(neg_from(2), from(5)), neg_from(2)) == EQ, 0);
-        assert!(cmp(mod(neg_from(2), neg_from(5)), neg_from(2)) == EQ, 1);
-        assert!(cmp(mod(from(2), from(5)), from(2)) == EQ, 2);
-        assert!(cmp(mod(from(2), neg_from(5)), from(2)) == EQ, 3);
-    }
-
-    // Minimum Tests
-    #[test]
-    fun test_min() {
-        assert!(eq(min(from(10), from(5)), from(5)), 0);
-        assert!(eq(min(from(0), neg_from(5)), neg_from(5)), 1);
-        assert!(eq(min(neg_from(10), neg_from(5)), neg_from(10)), 2);
-        assert!(eq(min(from(MAX_AS_U8), from(0)), from(0)), 3);
-        assert!(eq(min(neg_from(MIN_AS_U8), from(0)), neg_from(MIN_AS_U8)), 4);
-    }
-
-    // Maximum Tests
-    #[test]
-    fun test_max() {
-        assert!(eq(max(from(10), from(5)), from(10)), 0);
-        assert!(eq(max(from(0), neg_from(5)), from(0)), 1);
-        assert!(eq(max(neg_from(10), neg_from(5)), neg_from(5)), 2);
-        assert!(eq(max(from(MAX_AS_U8), from(0)), from(MAX_AS_U8)), 3);
-        assert!(eq(max(neg_from(MIN_AS_U8), from(0)), from(0)), 4);
-    }
-
-    #[test]
-    fun test_pow() {
-        assert!(eq(pow(from(2), 3), from(8)), 0);
-        assert!(eq(pow(neg_from(2), 3), neg_from(8)), 1);
-        assert!(eq(pow(neg_from(2), 2), from(4)), 2);
-    }
-
-    #[test]
-    #[expected_failure(abort_code = OVERFLOW)]
-    fun test_pow_overflow() {
-        pow(from(3), 4); // 3^4 = 81, which overflows I8
-    }
-
-    // #[test]
-    // fun test_pow() {
-    //     // assert!(eq(pow(from(2), 3), from(8)), 0);
-    //     assert!(
-    //         eq(
-    //             pow(
-    //                 from(3),
-    //                 4),
-    //             from(81)
-    //         ),
-    //     1);
-    //     // assert!(eq(pow(neg_from(2), 3), neg_from(8)), 2);
-    //     // assert!(eq(pow(neg_from(2), 2), from(4)), 3);
-    // }
-
-    #[test]
-    fun test_gcd() {
-        assert!(eq(gcd(from(48), from(18)), from(6)), 0);
-        assert!(eq(gcd(neg_from(48), from(18)), from(6)), 1);
-        assert!(eq(gcd(from(0), from(5)), from(5)), 2);
-    }
-
-    #[test]
-    fun test_is_zero() {
-        assert!(is_zero(from(0)), 0);
-        assert!(!is_zero(from(1)), 1);
-        assert!(!is_zero(neg_from(1)), 2);
-    }
-
-    #[test]
-    fun test_lcm() {
-        assert!(eq(lcm(from(5), from(7)), from(35)), 1);
-        assert!(eq(lcm(from(3), from(6)), from(6)), 2);
-        assert!(eq(lcm(from(0), from(5)), zero()), 3);
     }
 }

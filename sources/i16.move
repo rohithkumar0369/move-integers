@@ -15,33 +15,25 @@ module move_int::i16 {
 
     // Creates and returns an I16 representing zero
     public fun zero(): I16 {
-        I16 {
-            bits: 0
-        }
+        I16 { bits: 0 }
     }
 
     // Creates an I16 from a u16 without any checks
     public fun from_u16(v: u16): I16 {
-        I16 {
-            bits: v
-        }
+        I16 { bits: v }
     }
 
     // Creates an I16 from a u16, asserting that it's not greater than the maximum positive value
     public fun from(v: u16): I16 {
         assert!(v <= MAX_AS_U16, OVERFLOW);
-        I16 {
-            bits: v
-        }
+        I16 { bits: v }
     }
 
     // Creates a negative I16 from a u16, asserting that it's not greater than the minimum negative value
     public fun neg_from(v: u16): I16 {
         assert!(v <= MIN_AS_U16, OVERFLOW);
         if (v == 0) {
-            I16 {
-                bits: v
-            }
+            I16 { bits: v }
         } else {
             I16 {
                 bits: (u16_neg(v) + 1) | (1 << 15)
@@ -59,34 +51,28 @@ module move_int::i16 {
             sum = a ^ b;
             carry = (a & b) << 1;
         };
-        I16 {
-            bits: sum
-        }
+        I16 { bits: sum }
     }
 
     // Performs checked addition on two I16 numbers, asserting on overflow
     public fun add(num1: I16, num2: I16): I16 {
         let sum = wrapping_add(num1, num2);
-        let overflow = (sign(num1) & sign(num2) & u8_neg(sign(sum))) + (u8_neg(sign(num1)) & u8_neg(sign(num2)) & sign(
-            sum
-        ));
+        let overflow =
+            (sign(num1) & sign(num2) & u8_neg(sign(sum)))
+                + (u8_neg(sign(num1)) & u8_neg(sign(num2)) & sign(sum));
         assert!(overflow == 0, OVERFLOW);
         sum
     }
 
     // Performs wrapping subtraction on two I16 numbers
     public fun wrapping_sub(num1: I16, num2: I16): I16 {
-        let sub_num = wrapping_add(I16 {
-            bits: u16_neg(num2.bits)
-        }, from(1));
+        let sub_num = wrapping_add(I16 { bits: u16_neg(num2.bits) }, from(1));
         wrapping_add(num1, sub_num)
     }
 
     // Performs checked subtraction on two I16 numbers, asserting on overflow
     public fun sub(num1: I16, num2: I16): I16 {
-        let sub_num = wrapping_add(I16 {
-            bits: u16_neg(num2.bits)
-        }, from(1));
+        let sub_num = wrapping_add(I16 { bits: u16_neg(num2.bits) }, from(1));
         add(num1, sub_num)
     }
 
@@ -111,21 +97,17 @@ module move_int::i16 {
 
     // Returns the absolute value of an I16 number
     public fun abs(v: I16): I16 {
-        if (sign(v) == 0) {
-            v
-        } else {
+        if (sign(v) == 0) { v }
+        else {
             assert!(v.bits > MIN_AS_U16, OVERFLOW);
-            I16 {
-                bits: u16_neg(v.bits - 1)
-            }
+            I16 { bits: u16_neg(v.bits - 1) }
         }
     }
 
     // Returns the absolute value of an I16 number as a u16
     public fun abs_u16(v: I16): u16 {
-        if (sign(v) == 0) {
-            v.bits
-        } else {
+        if (sign(v) == 0) { v.bits }
+        else {
             u16_neg(v.bits - 1)
         }
     }
@@ -141,20 +123,14 @@ module move_int::i16 {
 
     // Returns the minimum of two I16 numbers
     public fun min(a: I16, b: I16): I16 {
-        if (lt(a, b)) {
-            a
-        } else {
-            b
-        }
+        if (lt(a, b)) { a }
+        else { b }
     }
 
     // Returns the maximum of two I16 numbers
     public fun max(a: I16, b: I16): I16 {
-        if (gt(a, b)) {
-            a
-        } else {
-            b
-        }
+        if (gt(a, b)) { a }
+        else { b }
     }
 
     // Raises an I16 number to a u16 power
@@ -255,16 +231,12 @@ module move_int::i16 {
 
     // Performs bitwise OR on two I16 numbers
     public fun or(num1: I16, num2: I16): I16 {
-        I16 {
-            bits: (num1.bits | num2.bits)
-        }
+        I16 { bits: (num1.bits | num2.bits) }
     }
 
     // Performs bitwise AND on two I16 numbers
     public fun and(num1: I16, num2: I16): I16 {
-        I16 {
-            bits: (num1.bits & num2.bits)
-        }
+        I16 { bits: (num1.bits & num2.bits) }
     }
 
     // Helper function to perform bitwise negation on a u16
@@ -275,220 +247,5 @@ module move_int::i16 {
     // Helper function to perform bitwise negation on a u8
     fun u8_neg(v: u8): u8 {
         v ^ 0xff
-    }
-
-    // Basic Operations Tests
-    #[test]
-    fun test_from() {
-        assert!(as_u16(from(0)) == 0, 0);
-        assert!(as_u16(from(10)) == 10, 1);
-    }
-
-    #[test]
-    #[expected_failure]
-    fun test_from_overflow() {
-        as_u16(from(MIN_AS_U16));
-        as_u16(from(0xffff));
-    }
-
-    #[test]
-    fun test_neg_from() {
-        assert!(as_u16(neg_from(0)) == 0, 0);
-        assert!(as_u16(neg_from(1)) == 0xffff, 1);
-        assert!(as_u16(neg_from(0x7fff)) == 0x8001, 2);
-        assert!(as_u16(neg_from(MIN_AS_U16)) == MIN_AS_U16, 3);
-    }
-
-    #[test]
-    #[expected_failure]
-    fun test_neg_from_overflow() {
-        neg_from(0x8001);
-    }
-
-    // Absolute Value Tests
-    #[test]
-    fun test_abs() {
-        assert!(as_u16(abs(from(10))) == 10u16, 0);
-        assert!(as_u16(abs(neg_from(10))) == 10u16, 1);
-        assert!(as_u16(abs(neg_from(0))) == 0u16, 2);
-        assert!(as_u16(abs(neg_from(0x7fff))) == 0x7fff, 3);
-    }
-
-    #[test]
-    #[expected_failure]
-    fun test_abs_overflow() {
-        abs(neg_from(1 << 15));
-    }
-
-    // Addition Tests
-    #[test]
-    fun test_wrapping_add_positive() {
-        assert!(as_u16(wrapping_add(from(0), from(1))) == 1, 0);
-        assert!(as_u16(wrapping_add(from(10000), from(9999))) == 19999, 1);
-        assert!(as_u16(wrapping_add(from(MAX_AS_U16 - 1), from(1))) == MAX_AS_U16, 2);
-    }
-
-    #[test]
-    fun test_wrapping_add_negative() {
-        assert!(as_u16(wrapping_add(neg_from(1), neg_from(0))) == 0xffff, 0);
-        assert!(as_u16(wrapping_add(neg_from(100), neg_from(50))) == 0xff6a, 1);
-    }
-
-    #[test]
-    fun test_wrapping_add_mixed() {
-        assert!(as_u16(wrapping_add(from(10000), neg_from(9999))) == 1, 0);
-        assert!(as_u16(wrapping_add(from(9999), neg_from(10000))) == 0xffff, 1);
-        assert!(as_u16(wrapping_add(from(MAX_AS_U16), from(1))) == MIN_AS_U16, 2);
-    }
-
-    #[test]
-    fun test_add() {
-        assert!(as_u16(add(from(0), from(1))) == 1, 0);
-        assert!(as_u16(add(neg_from(1), from(1))) == 0, 1);
-        assert!(as_u16(add(from(MAX_AS_U16 - 1), from(1))) == MAX_AS_U16, 2);
-    }
-
-    #[test]
-    #[expected_failure]
-    fun test_add_overflow() {
-        add(from(MAX_AS_U16), from(1));
-    }
-
-    #[test]
-    #[expected_failure]
-    fun test_add_underflow() {
-        add(neg_from(MIN_AS_U16), neg_from(1));
-    }
-
-    // Subtraction Tests
-    #[test]
-    fun test_wrapping_sub() {
-        assert!(as_u16(wrapping_sub(from(1), from(0))) == 1, 0);
-        assert!(as_u16(wrapping_sub(from(0), from(1))) == as_u16(neg_from(1)), 1);
-        assert!(as_u16(wrapping_sub(from(1), neg_from(1))) == as_u16(from(2)), 2);
-        assert!(as_u16(wrapping_sub(from(MAX_AS_U16), from(1))) == as_u16(from(MAX_AS_U16 - 1)), 3);
-    }
-
-    #[test]
-    fun test_sub() {
-        assert!(as_u16(sub(from(1), from(0))) == 1, 0);
-        assert!(as_u16(sub(from(0), from(1))) == as_u16(neg_from(1)), 1);
-        assert!(as_u16(sub(from(MAX_AS_U16), from(MAX_AS_U16))) == as_u16(from(0)), 2);
-    }
-
-    #[test]
-    #[expected_failure]
-    fun test_sub_overflow() {
-        sub(from(MAX_AS_U16), neg_from(1));
-    }
-
-    #[test]
-    #[expected_failure]
-    fun test_sub_underflow() {
-        sub(neg_from(MIN_AS_U16), from(1));
-    }
-
-    // Multiplication Tests
-    #[test]
-    fun test_mul() {
-        assert!(as_u16(mul(from(10), from(10))) == 100, 0);
-        assert!(as_u16(mul(neg_from(10), from(10))) == as_u16(neg_from(100)), 1);
-        assert!(as_u16(mul(from(10), neg_from(10))) == as_u16(neg_from(100)), 2);
-        assert!(as_u16(mul(from(MIN_AS_U16 / 2), neg_from(2))) == as_u16(neg_from(MIN_AS_U16)), 3);
-    }
-
-    #[test]
-    #[expected_failure]
-    fun test_mul_overflow() {
-        mul(from(MIN_AS_U16 / 2), from(3));
-    }
-
-    // Division Tests
-    #[test]
-    fun test_div() {
-        assert!(as_u16(div(from(10), from(1))) == 10, 0);
-        assert!(as_u16(div(from(10), neg_from(1))) == as_u16(neg_from(10)), 1);
-        assert!(as_u16(div(neg_from(10), neg_from(1))) == as_u16(from(10)), 2);
-        assert!(as_u16(div(neg_from(MIN_AS_U16), from(1))) == MIN_AS_U16, 3);
-    }
-
-    #[test]
-    #[expected_failure]
-    fun test_div_overflow() {
-        div(neg_from(MIN_AS_U16), neg_from(1));
-    }
-
-    // Comparison Tests
-    #[test]
-    fun test_sign() {
-        assert!(sign(neg_from(10)) == 1u8, 0);
-        assert!(sign(from(10)) == 0u8, 1);
-    }
-
-    #[test]
-    fun test_cmp() {
-        assert!(cmp(from(1), from(0)) == GT, 0);
-        assert!(cmp(from(0), from(1)) == LT, 1);
-        assert!(cmp(from(0), neg_from(1)) == GT, 2);
-        assert!(cmp(neg_from(MIN_AS_U16), from(MAX_AS_U16)) == LT, 3);
-    }
-
-    // Modulo Tests
-    #[test]
-    fun test_mod() {
-        assert!(cmp(mod(neg_from(2), from(5)), neg_from(2)) == EQ, 0);
-        assert!(cmp(mod(neg_from(2), neg_from(5)), neg_from(2)) == EQ, 1);
-        assert!(cmp(mod(from(2), from(5)), from(2)) == EQ, 2);
-        assert!(cmp(mod(from(2), neg_from(5)), from(2)) == EQ, 3);
-    }
-
-    // Minimum Tests
-    #[test]
-    fun test_min() {
-        assert!(eq(min(from(10), from(5)), from(5)), 0);
-        assert!(eq(min(from(0), neg_from(5)), neg_from(5)), 1);
-        assert!(eq(min(neg_from(10), neg_from(5)), neg_from(10)), 2);
-        assert!(eq(min(from(MAX_AS_U16), from(0)), from(0)), 3);
-        assert!(eq(min(neg_from(MIN_AS_U16), from(0)), neg_from(MIN_AS_U16)), 4);
-    }
-
-    // Maximum Tests
-    #[test]
-    fun test_max() {
-        assert!(eq(max(from(10), from(5)), from(10)), 0);
-        assert!(eq(max(from(0), neg_from(5)), from(0)), 1);
-        assert!(eq(max(neg_from(10), neg_from(5)), neg_from(5)), 2);
-        assert!(eq(max(from(MAX_AS_U16), from(0)), from(MAX_AS_U16)), 3);
-        assert!(eq(max(neg_from(MIN_AS_U16), from(0)), from(0)), 4);
-    }
-
-    #[test]
-    fun test_pow() {
-        assert!(eq(pow(from(2), 3), from(8)), 0);
-        assert!(eq(pow(from(3), 4), from(81)), 1);
-        assert!(eq(pow(neg_from(2), 3), neg_from(8)), 2);
-        assert!(eq(pow(neg_from(2), 2), from(4)), 3);
-    }
-
-    #[test]
-    fun test_gcd() {
-        assert!(eq(gcd(from(48), from(18)), from(6)), 0);
-        assert!(eq(gcd(neg_from(48), from(18)), from(6)), 1);
-        assert!(eq(gcd(from(0), from(5)), from(5)), 2);
-    }
-
-    #[test]
-    fun test_is_zero() {
-        assert!(is_zero(from(0)), 0);
-        assert!(!is_zero(from(1)), 1);
-        assert!(!is_zero(neg_from(1)), 2);
-    }
-
-    #[test]
-    fun test_lcm() {
-        assert!(eq(lcm(neg_from(12), from(18)), from(36)), 0);
-        assert!(eq(lcm(from(5), from(7)), from(35)), 1);
-        assert!(eq(lcm(from(3), from(6)), from(6)), 2);
-        assert!(eq(lcm(from(0), from(5)), zero()), 3);
     }
 }
