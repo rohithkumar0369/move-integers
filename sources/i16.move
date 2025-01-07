@@ -112,15 +112,6 @@ module move_int::i16 {
         }
     }
 
-    // Performs modulo operation on two I16 numbers
-    public fun mod(v: I16, n: I16): I16 {
-        if (sign(v) == 1) {
-            neg_from((abs_u16(v) % abs_u16(n)))
-        } else {
-            from((as_u16(v) % abs_u16(n)))
-        }
-    }
-
     // Returns the minimum of two I16 numbers
     public fun min(a: I16, b: I16): I16 {
         if (lt(a, b)) { a }
@@ -149,27 +140,6 @@ module move_int::i16 {
             exp = exp >> 1;
         };
         result
-    }
-
-    // Calculates the greatest common divisor of two I16 numbers
-    public fun gcd(a: I16, b: I16): I16 {
-        let a = abs(a);
-        let b = abs(b);
-        while (!is_zero(b)) {
-            let temp = b;
-            b = mod(a, b);
-            a = temp;
-        };
-        a
-    }
-
-    // Calculates the least common multiple of two I16 numbers
-    public fun lcm(a: I16, b: I16): I16 {
-        if (is_zero(a) || is_zero(b)) {
-            return zero()
-        };
-        let gcd_val = gcd(a, b);
-        abs(div(mul(a, b), gcd_val))
     }
 
     // Converts an I16 to u16

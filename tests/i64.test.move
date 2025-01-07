@@ -1,8 +1,8 @@
 #[test_only]
 module move_int::i64_test {
     use move_int::i64::{as_u64, from, from_u64, neg_from, abs, abs_u64,
-        add, sub, mul, div, mod, wrapping_add, wrapping_sub, pow, gcd, lcm,
-        sign, cmp, min, max, eq, gt, lt, gte, lte, and, or, is_zero, is_neg, zero
+        add, sub, mul, div, wrapping_add, wrapping_sub, pow, sign, cmp,
+        min, max, eq, gt, lt, gte, lte, and, or, is_zero, is_neg, zero
     };
 
     // Constants for testing
@@ -89,13 +89,6 @@ module move_int::i64_test {
             as_u64(div(from(100), neg_from(10))) == as_u64(neg_from(10)),
             9
         );
-
-        // Test modulo
-        assert!(eq(mod(from(7), from(4)), from(3)), 10);
-        assert!(
-            eq(mod(neg_from(7), from(4)), neg_from(3)),
-            11
-        );
     }
 
     #[test]
@@ -122,12 +115,6 @@ module move_int::i64_test {
         div(from(MAX_AS_U64), from(0));
     }
 
-    #[test]
-    #[expected_failure(abort_code = 1, location = move_int::i64)]
-    fun test_mod_by_zero() {
-        mod(from(MAX_AS_U64), from(0));
-    }
-
     // === Advanced Math Operation Tests ===
     #[test]
     fun test_advanced_operations() {
@@ -135,18 +122,6 @@ module move_int::i64_test {
         assert!(eq(pow(from(2), 3), from(8)), 0);
         assert!(eq(pow(neg_from(2), 3), neg_from(8)), 1);
         assert!(eq(pow(from(2), 0), from(1)), 2);
-
-        // Test gcd
-        assert!(eq(gcd(from(48), from(18)), from(6)), 3);
-        assert!(
-            eq(gcd(neg_from(48), from(18)), from(6)),
-            4
-        );
-        assert!(eq(gcd(from(0), from(5)), from(5)), 5);
-
-        // Test lcm
-        assert!(eq(lcm(from(12), from(18)), from(36)), 6);
-        assert!(eq(lcm(from(0), from(5)), zero()), 7);
     }
 
     #[test]
