@@ -114,16 +114,6 @@ module move_int::i64 {
         }
     }
 
-    // Performs modulo operation on two I64 numbers
-    public fun mod(v: I64, n: I64): I64 {
-        assert!(!is_zero(n), DIVISION_BY_ZERO);
-        if (sign(v) == 1) {
-            neg_from((abs_u64(v) % abs_u64(n)))
-        } else {
-            from((as_u64(v) % abs_u64(n)))
-        }
-    }
-
     // Returns the minimum of two I64 numbers
     public fun min(a: I64, b: I64): I64 {
         if (lt(a, b)) { a }
@@ -152,27 +142,6 @@ module move_int::i64 {
             exp = exp >> 1;
         };
         result
-    }
-
-    // Calculates the greatest common divisor of two I64 numbers
-    public fun gcd(a: I64, b: I64): I64 {
-        let a = abs(a);
-        let b = abs(b);
-        while (!is_zero(b)) {
-            let temp = b;
-            b = mod(a, b);
-            a = temp;
-        };
-        a
-    }
-
-    // Calculates the least common multiple of two I64 numbers
-    public fun lcm(a: I64, b: I64): I64 {
-        if (is_zero(a) || is_zero(b)) {
-            return zero()
-        };
-        let gcd_val = gcd(a, b);
-        abs(div(mul(a, b), gcd_val))
     }
 
     // Converts an I64 to u64

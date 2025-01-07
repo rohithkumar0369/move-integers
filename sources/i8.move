@@ -114,16 +114,6 @@ module move_int::i8 {
         }
     }
 
-    // Performs modulo operation on two I8 numbers
-    public fun mod(v: I8, n: I8): I8 {
-        assert!(!is_zero(n), DIVISION_BY_ZERO);
-        if (sign(v) == 1) {
-            neg_from((abs_u8(v) % abs_u8(n)))
-        } else {
-            from((as_u8(v) % abs_u8(n)))
-        }
-    }
-
     // Returns the minimum of two I8 numbers
     public fun min(a: I8, b: I8): I8 {
         if (lt(a, b)) { a }
@@ -154,27 +144,6 @@ module move_int::i8 {
         };
 
         result
-    }
-
-    // Calculates the greatest common divisor of two I8 numbers
-    public fun gcd(a: I8, b: I8): I8 {
-        let a = abs(a);
-        let b = abs(b);
-        while (!is_zero(b)) {
-            let temp = b;
-            b = mod(a, b);
-            a = temp;
-        };
-        a
-    }
-
-    // Calculates the least common multiple of two I8 numbers
-    public fun lcm(a: I8, b: I8): I8 {
-        if (is_zero(a) || is_zero(b)) {
-            return zero()
-        };
-        let gcd_val = gcd(a, b);
-        abs(div(mul(a, b), gcd_val))
     }
 
     // Converts an I8 to u8

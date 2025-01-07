@@ -1,8 +1,8 @@
 #[test_only]
 module move_int::i8_test {
     use move_int::i8::{as_u8, from, from_u8, neg_from, abs, add, sub, mul,
-        div, mod, wrapping_sub, pow, gcd, lcm, sign, cmp, min, max,
-        eq, gte, lte, and, or, is_zero, is_neg, zero
+        div, wrapping_sub, pow, sign, cmp, min, max, eq, gte, lte,
+        and, or, is_zero, is_neg, zero
     };
 
     // Constants for testing
@@ -99,29 +99,6 @@ module move_int::i8_test {
             as_u8(div(neg_from(6), neg_from(2))) == 3,
             13
         );
-
-        // Test modulo with all sign combinations
-        assert!(eq(mod(from(7), from(4)), from(3)), 14); // pos % pos
-        assert!(
-            eq(mod(neg_from(7), from(4)), neg_from(3)),
-            15
-        ); // neg % pos
-        assert!(
-            eq(mod(from(7), neg_from(4)), from(3)),
-            16
-        ); // pos % neg
-        assert!(
-            eq(
-                mod(neg_from(7), neg_from(4)),
-                neg_from(3)
-            ),
-            17
-        ); // neg % neg
-        assert!(eq(mod(zero(), from(5)), zero()), 18); // zero dividend
-        assert!(
-            eq(mod(from(MAX_AS_U8), from(2)), from(1)),
-            19
-        ); // max value
     }
 
     #[test]
@@ -160,12 +137,6 @@ module move_int::i8_test {
         div(from(1), from(0));
     }
 
-    #[test]
-    #[expected_failure(abort_code = 1, location = move_int::i8)]
-    fun test_mod_division_by_zero() {
-        mod(from(15), from(0));
-    }
-
     // === Advanced Math Operation Tests ===
     #[test]
     fun test_advanced_operations() {
@@ -175,19 +146,6 @@ module move_int::i8_test {
         assert!(eq(pow(from(2), 0), from(1)), 2);
         assert!(eq(pow(from(1), 127), from(1)), 3);
         assert!(eq(pow(neg_from(1), 127), neg_from(1)), 4);
-
-        // Test gcd
-        assert!(eq(gcd(from(48), from(18)), from(6)), 5);
-        assert!(
-            eq(gcd(neg_from(48), from(18)), from(6)),
-            6
-        );
-        assert!(eq(gcd(from(0), from(5)), from(5)), 7);
-
-        // Test lcm
-        assert!(eq(lcm(from(5), from(7)), from(35)), 8);
-        assert!(eq(lcm(from(3), from(6)), from(6)), 9);
-        assert!(eq(lcm(from(0), from(5)), zero()), 10);
     }
 
     #[test]

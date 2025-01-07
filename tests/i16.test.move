@@ -1,8 +1,8 @@
 #[test_only]
 module move_int::i16_test {
     use move_int::i16::{as_u16, from, from_u16, neg_from, abs, add,
-        sub, mul, div, mod, wrapping_add, wrapping_sub, pow, gcd, lcm,
-        sign, cmp, min, max, eq, gte, lte, and, or, is_zero, is_neg, zero
+        sub, mul, div, wrapping_add, wrapping_sub, pow, sign, cmp,
+        min, max, eq, gte, lte, and, or, is_zero, is_neg, zero
     };
 
     // Constants for testing
@@ -115,13 +115,6 @@ module move_int::i16_test {
             as_u16(div(neg_from(10), neg_from(1))) == as_u16(from(10)),
             15
         );
-
-        // Test modulo
-        assert!(eq(mod(from(7), from(4)), from(3)), 16);
-        assert!(
-            eq(mod(neg_from(7), from(4)), neg_from(3)),
-            17
-        );
     }
 
     #[test]
@@ -170,22 +163,6 @@ module move_int::i16_test {
         assert!(eq(pow(neg_from(2), 2), from(4)), 3);
         assert!(eq(pow(from(1), 100), from(1)), 4);
         assert!(eq(pow(from(3), 3), from(27)), 5);
-
-        // Test gcd
-        assert!(eq(gcd(from(48), from(18)), from(6)), 6);
-        assert!(
-            eq(gcd(neg_from(48), from(18)), from(6)),
-            7
-        );
-        assert!(eq(gcd(from(0), from(5)), from(5)), 8);
-
-        // Test lcm
-        assert!(
-            eq(lcm(neg_from(12), from(18)), from(36)),
-            9
-        );
-        assert!(eq(lcm(from(5), from(7)), from(35)), 10);
-        assert!(eq(lcm(from(0), from(5)), zero()), 11);
     }
 
     // === Comparison Tests ===
