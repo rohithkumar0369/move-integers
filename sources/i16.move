@@ -1,6 +1,8 @@
 module move_int::i16 {
 
     const OVERFLOW: u64 = 0;
+    const DIVISION_BY_ZERO: u64 = 1;
+
 
     const MIN_AS_U16: u16 = 1 << 15;
     const MAX_AS_U16: u16 = 0x7fff;
@@ -88,6 +90,7 @@ module move_int::i16 {
 
     // Performs division on two I16 numbers
     public fun div(num1: I16, num2: I16): I16 {
+        assert!(!is_zero(num2), DIVISION_BY_ZERO);
         let result = abs_u16(num1) / abs_u16(num2);
         if (sign(num1) != sign(num2)) {
             return neg_from(result)

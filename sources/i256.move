@@ -1,5 +1,6 @@
 module move_int::i256 {
     const OVERFLOW: u64 = 0;
+    const DIVISION_BY_ZERO: u64 = 1;
 
     const MIN_AS_U256: u256 = 1 << 255;
     const MAX_AS_U256: u256 =
@@ -97,6 +98,7 @@ module move_int::i256 {
     }
 
     public fun div(num1: I256, num2: I256): I256 {
+        assert!(!is_zero(num2), DIVISION_BY_ZERO);
         let result = abs_u256(num1) / abs_u256(num2);
         if (sign(num1) != sign(num2)) {
             return neg_from(result)

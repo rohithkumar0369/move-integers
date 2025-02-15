@@ -1,5 +1,6 @@
 module move_int::i128 {
     const OVERFLOW: u64 = 0;
+    const DIVISION_BY_ZERO: u64 = 1;
 
     const MIN_AS_U128: u128 = 1 << 127;
     const MAX_AS_U128: u128 = 0x7fffffffffffffffffffffffffffffff;
@@ -100,6 +101,7 @@ module move_int::i128 {
     }
 
     public fun div(num1: I128, num2: I128): I128 {
+        assert!(!is_zero(num2), DIVISION_BY_ZERO);
         let result = abs_u128(num1) / abs_u128(num2);
         if (sign(num1) != sign(num2)) {
             return neg_from(result)

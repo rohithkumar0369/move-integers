@@ -1,6 +1,8 @@
 module move_int::i32 {
 
     const OVERFLOW: u64 = 0;
+    const DIVISION_BY_ZERO: u64 = 1;
+
 
     const MIN_AS_U32: u32 = 1 << 31;
     const MAX_AS_U32: u32 = 0x7fffffff;
@@ -88,6 +90,7 @@ module move_int::i32 {
 
     // Performs division on two I32 numbers
     public fun div(num1: I32, num2: I32): I32 {
+        assert!(!is_zero(num2), DIVISION_BY_ZERO);
         let result = abs_u32(num1) / abs_u32(num2);
         if (sign(num1) != sign(num2)) {
             return neg_from(result)
