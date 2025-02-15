@@ -4,11 +4,9 @@ version = "1.0.0"
 authors = ["0xAnto"]
 
 [addresses]
-move_int = "0xfff3b2d7c65b54bd8643cf5b66a7aaf8461d0a533fce0dd88684b0acdc5e3fff"
+move_int = "0xfff1e5bad5901cdb1c6755ece8603b992b3f0000a3e5b96d8d0bdc49d6433fff"
 
 [dependencies.AptosFramework]
-git = "https://github.com/aptos-labs/aptos-core.git"
-rev = "mainnet"
-subdir = "aptos-move/framework/aptos-framework"
-
-[dev-dependencies]
+git = "https://github.com/aptos-labs/aptos-framework.git"
+rev = "testnet"
+subdir = "aptos-framework"
