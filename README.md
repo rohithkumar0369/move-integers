@@ -1,7 +1,5 @@
 # Move Integers
 
-⚠️ **WARNING: These Move modules has not been audited. Use with caution in production environments. The authors are not responsible for any potential issues or vulnerabilities.** ⚠️
-
 ## Overview
 
 This repository contains a collection of Move modules implementing various integer sizes. These modules are designed to provide more flexibility in integer operations within Move smart contracts.
@@ -39,12 +37,12 @@ aptos move test
 
 | Module                                                                 | Coverage (%) |
 | ---------------------------------------------------------------------- | ------------ |
-| fff3b2d7c65b54bd8643cf5b66a7aaf8461d0a533fce0dd88684b0acdc5e3fff::i128 | 100.00       |
-| fff3b2d7c65b54bd8643cf5b66a7aaf8461d0a533fce0dd88684b0acdc5e3fff::i16  | 100.00       |
-| fff3b2d7c65b54bd8643cf5b66a7aaf8461d0a533fce0dd88684b0acdc5e3fff::i256 | 100.00       |
-| fff3b2d7c65b54bd8643cf5b66a7aaf8461d0a533fce0dd88684b0acdc5e3fff::i32  | 100.00       |
-| fff3b2d7c65b54bd8643cf5b66a7aaf8461d0a533fce0dd88684b0acdc5e3fff::i64  | 100.00       |
-| fff3b2d7c65b54bd8643cf5b66a7aaf8461d0a533fce0dd88684b0acdc5e3fff::i8   | 100.00       |
+| fff1e5bad5901cdb1c6755ece8603b992b3f0000a3e5b96d8d0bdc49d6433fff::i128 | 100.00       |
+| fff1e5bad5901cdb1c6755ece8603b992b3f0000a3e5b96d8d0bdc49d6433fff::i16  | 100.00       |
+| fff1e5bad5901cdb1c6755ece8603b992b3f0000a3e5b96d8d0bdc49d6433fff::i256 | 100.00       |
+| fff1e5bad5901cdb1c6755ece8603b992b3f0000a3e5b96d8d0bdc49d6433fff::i32  | 100.00       |
+| fff1e5bad5901cdb1c6755ece8603b992b3f0000a3e5b96d8d0bdc49d6433fff::i64  | 100.00       |
+| fff1e5bad5901cdb1c6755ece8603b992b3f0000a3e5b96d8d0bdc49d6433fff::i8   | 100.00       |
 | **Overall Move Coverage**                                              | **100.00%**  |
 
 ## TODO
@@ -63,6 +61,9 @@ This project drew inspiration from the Integer Mate repository by Cetus Protocol
 ## License
 
 This project is licensed under the MIT License. @ Antony Ranjith F
+
+## Audit
+Audited by MoveBit.
 
 ## Contact
 
