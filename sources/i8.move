@@ -131,16 +131,13 @@ module move_int::i8 {
         if (exponent == 0) {
             return from(1)
         };
-
         let result = from(1);
-        let current_base = base;
-
         while (exponent > 0) {
             if (exponent & 1 == 1) {
-                result = mul(result, current_base);
+                result = mul(result, base);
             };
-            current_base = mul(current_base, current_base);
-            exponent = exponent >> 1;
+            base = mul(base, base);
+            exponent >>= 1;
         };
 
         result
