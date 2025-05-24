@@ -132,16 +132,16 @@ module move_int::i256 {
     }
 
     public fun pow(base: I256, exponent: u64): I256 {
+        if (exponent == 0) {
+            return from(1)
+        };
         let result = from(1);
-        let b = base;
-        let exp = exponent;
-
-        while (exp > 0) {
-            if (exp & 1 == 1) {
-                result = mul(result, b);
+        while (exponent > 0) {
+            if (exponent & 1 == 1) {
+                result = mul(result, base);
             };
-            b = mul(b, b);
-            exp = exp >> 1;
+            base = mul(base, base);
+            exponent >>= 1;
         };
         result
     }
