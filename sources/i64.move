@@ -132,14 +132,12 @@ module move_int::i64 {
             return from(1)
         };
         let result = from(1);
-        let base = base;
-        let exp = exponent;
-        while (exp > 0) {
-            if (exp & 1 == 1) {
+        while (exponent > 0) {
+            if (exponent & 1 == 1) {
                 result = mul(result, base);
             };
             base = mul(base, base);
-            exp = exp >> 1;
+            exponent >>= 1;
         };
         result
     }
