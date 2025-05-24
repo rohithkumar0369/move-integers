@@ -58,6 +58,12 @@ Contributions to improve these modules are welcome. Please ensure you add approp
 
 This project drew inspiration from the Integer Mate repository by Cetus Protocol. Their work has been a valuable contribution to the Move ecosystem.
 
+## Contributors
+
+<a href="https://github.com/0xAnto"><img src="https://avatars.githubusercontent.com/u/72078695?v=4" width="50" alt="@0xAnto" style="border-radius:50%"></a>
+<a href="https://github.com/0xbe1"><img src="https://avatars.githubusercontent.com/u/101405096?v=4" width="50" alt="@0xbe1" style="border-radius:50%"></a>
+<a href="https://github.com/ch4r10t33r"><img src="https://avatars.githubusercontent.com/u/1627026?v=4" width="50" alt="@ch4r10t33r" style="border-radius:50%"></a>
+
 ## License
 
 This project is licensed under the MIT License. @ Antony Ranjith F
