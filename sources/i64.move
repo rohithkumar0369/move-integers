@@ -44,15 +44,7 @@ module move_int::i64 {
 
     // Performs wrapping addition on two I64 numbers
     public fun wrapping_add(num1: I64, num2: I64): I64 {
-        let sum = num1.bits ^ num2.bits;
-        let carry = (num1.bits & num2.bits) << 1;
-        while (carry != 0) {
-            let a = sum;
-            let b = carry;
-            sum = a ^ b;
-            carry = (a & b) << 1;
-        };
-        I64 { bits: sum }
+        I64 { bits: (((num1.bits as u128) + (num2.bits as u128)) & 0xffffffffffffffff as u64) }
     }
 
     // Performs checked addition on two I64 numbers, asserting on overflow

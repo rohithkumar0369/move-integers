@@ -45,15 +45,7 @@ module move_int::i16 {
 
     // Performs wrapping addition on two I16 numbers
     public fun wrapping_add(num1: I16, num2: I16): I16 {
-        let sum = num1.bits ^ num2.bits;
-        let carry = (num1.bits & num2.bits) << 1;
-        while (carry != 0) {
-            let a = sum;
-            let b = carry;
-            sum = a ^ b;
-            carry = (a & b) << 1;
-        };
-        I16 { bits: sum }
+        I16 { bits: (((num1.bits as u32) + (num2.bits as u32)) & 0xffff as u16) }
     }
 
     // Performs checked addition on two I16 numbers, asserting on overflow

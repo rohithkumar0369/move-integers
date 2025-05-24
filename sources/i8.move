@@ -43,15 +43,7 @@ module move_int::i8 {
 
     // Performs wrapping addition on two I8 numbers
     public fun wrapping_add(num1: I8, num2: I8): I8 {
-        let sum = num1.bits ^ num2.bits;
-        let carry = (num1.bits & num2.bits) << 1;
-        while (carry != 0) {
-            let a = sum;
-            let b = carry;
-            sum = a ^ b;
-            carry = (a & b) << 1;
-        };
-        I8 { bits: sum }
+        I8 { bits: (((num1.bits as u16) + (num2.bits as u16)) & 0xff as u8) }
     }
 
     // Performs checked addition on two I8 numbers, asserting on overflow
