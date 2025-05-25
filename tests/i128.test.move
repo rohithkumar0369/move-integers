@@ -1,14 +1,14 @@
 #[test_only]
 module move_int::i128_test {
     use move_int::i128::{as_u128, from, neg_from, abs, abs_u128, add, sub, mul,
-        div, wrapping_add, wrapping_sub, overflowing_add, overflowing_sub, pow, neg,
+        div, wrapping_add, wrapping_sub, overflowing_add, overflowing_sub, pow, mod, neg,
         sign, cmp, min, max, eq, gt, lt, gte, lte, and, or, is_zero, is_neg, zero
     };
 
     // Constants for testing
     const OVERFLOW: u64 = 0;
-    const MIN_AS_U128: u128 = 1 << 127;
-    const MAX_AS_U128: u128 = 0x7fffffffffffffffffffffffffffffff;
+    const BITS_MIN_I128: u128 = 1 << 127;
+    const BITS_MAX_I128: u128 = 0x7fffffffffffffffffffffffffffffff;
     const LT: u8 = 0;
     const EQ: u8 = 1;
     const GT: u8 = 2;
@@ -25,18 +25,18 @@ module move_int::i128_test {
         // Test from()
         assert!(as_u128(from(0)) == 0, 3);
         assert!(as_u128(from(10)) == 10, 4);
-        assert!(as_u128(from(MAX_AS_U128)) == MAX_AS_U128, 5);
+        assert!(as_u128(from(BITS_MAX_I128)) == BITS_MAX_I128, 5);
 
         // Test neg_from()
         assert!(as_u128(neg_from(0)) == 0, 6);
         assert!(as_u128(neg_from(1)) == 0xffffffffffffffffffffffffffffffff, 7);
-        assert!(as_u128(neg_from(MIN_AS_U128)) == MIN_AS_U128, 8);
+        assert!(as_u128(neg_from(BITS_MIN_I128)) == BITS_MIN_I128, 8);
     }
 
     #[test]
     #[expected_failure(abort_code = 0, location = move_int::i128)]
     fun test_from_overflow() {
-        from(MIN_AS_U128);
+        from(BITS_MIN_I128);
     }
 
     #[test]
@@ -55,8 +55,8 @@ module move_int::i128_test {
         );
         assert!(
             as_u128(
-                wrapping_add(from(MAX_AS_U128), from(1))
-            ) == MIN_AS_U128,
+                wrapping_add(from(BITS_MAX_I128), from(1))
+            ) == BITS_MIN_I128,
             1
         );
         assert!(
@@ -70,21 +70,21 @@ module move_int::i128_test {
 
         // Test overflowing operations
         let (result, overflow) = overflowing_add(
-            from(MAX_AS_U128), neg_from(1)
+            from(BITS_MAX_I128), neg_from(1)
         );
         assert!(
-            !overflow && as_u128(result) == MAX_AS_U128 - 1,
+            !overflow && as_u128(result) == BITS_MAX_I128 - 1,
             4
         );
-        let (_, overflow) = overflowing_add(from(MAX_AS_U128), from(1));
+        let (_, overflow) = overflowing_add(from(BITS_MAX_I128), from(1));
         assert!(overflow, 5);
 
-        let (result, overflow) = overflowing_sub(from(MAX_AS_U128), from(1));
+        let (result, overflow) = overflowing_sub(from(BITS_MAX_I128), from(1));
         assert!(
-            !overflow && as_u128(result) == MAX_AS_U128 - 1,
+            !overflow && as_u128(result) == BITS_MAX_I128 - 1,
             6
         );
-        let (_, overflow) = overflowing_sub(neg_from(MIN_AS_U128), from(1));
+        let (_, overflow) = overflowing_sub(neg_from(BITS_MIN_I128), from(1));
         assert!(overflow, 7);
 
         // Test basic operations
@@ -107,8 +107,8 @@ module move_int::i128_test {
         assert!(as_u128(mul(from(0), from(10))) == 0, 13);
         assert!(as_u128(mul(from(10), from(0))) == 0, 14);
         assert!(
-            as_u128(mul(from(MIN_AS_U128 / 2), neg_from(2)))
-                == as_u128(neg_from(MIN_AS_U128)),
+            as_u128(mul(from(BITS_MIN_I128 / 2), neg_from(2)))
+                == as_u128(neg_from(BITS_MIN_I128)),
             15
         );
 
@@ -131,39 +131,45 @@ module move_int::i128_test {
         );
         assert!(as_u128(div(from(0), from(10))) == 0, 20);
         assert!(
-            as_u128(div(neg_from(MIN_AS_U128), from(1))) == MIN_AS_U128,
+            as_u128(div(neg_from(BITS_MIN_I128), from(1))) == BITS_MIN_I128,
             21
         );
+
+        // Test mod
+        assert!(eq(mod(neg_from(3), from(3)), zero()), 10);
+        assert!(eq(mod(neg_from(4), from(3)), neg_from(1)), 11);
+        assert!(eq(mod(neg_from(5), from(3)), neg_from(2)), 12);
+        assert!(eq(mod(neg_from(6), from(3)), zero()), 13);
     }
 
     #[test]
     #[expected_failure(abort_code = 0, location = move_int::i128)]
     fun test_add_overflow() {
-        add(from(MAX_AS_U128), from(1));
+        add(from(BITS_MAX_I128), from(1));
     }
 
     #[test]
     #[expected_failure(abort_code = 0, location = move_int::i128)]
     fun test_sub_underflow() {
-        sub(neg_from(MIN_AS_U128), from(1));
+        sub(neg_from(BITS_MIN_I128), from(1));
     }
 
     #[test]
     #[expected_failure(abort_code = 0, location = move_int::i128)]
-    fun test_mul_overflow() {
-        mul(from(MIN_AS_U128 / 2), from(3));
+    fun test_mul_positive_overflow() {
+        mul(from(BITS_MAX_I128), from(BITS_MAX_I128));
     }
 
     #[test]
     #[expected_failure(abort_code = 0, location = move_int::i128)]
-    fun test_mul_overflow_negative() {
-        mul(neg_from(MIN_AS_U128 / 2), neg_from(2));
+    fun test_mul_negative_overflow() {
+        mul(from(BITS_MIN_I128), from(BITS_MAX_I128));
     }
 
     #[test]
     #[expected_failure(abort_code = 0, location = move_int::i128)]
     fun test_div_overflow() {
-        div(neg_from(MIN_AS_U128), neg_from(1));
+        div(neg_from(BITS_MIN_I128), neg_from(1));
     }
 
     // === Advanced Math Operation Tests ===
@@ -180,8 +186,8 @@ module move_int::i128_test {
         assert!(eq(neg(zero()), zero()), 5);
         assert!(
             eq(
-                neg(from(MAX_AS_U128)),
-                neg_from(MAX_AS_U128)
+                neg(from(BITS_MAX_I128)),
+                neg_from(BITS_MAX_I128)
             ),
             6
         );
@@ -197,11 +203,11 @@ module move_int::i128_test {
         assert!(cmp(neg_from(1), from(0)) == LT, 3);
         assert!(cmp(from(0), neg_from(1)) == GT, 4);
         assert!(
-            cmp(neg_from(MIN_AS_U128), from(MAX_AS_U128)) == LT,
+            cmp(neg_from(BITS_MIN_I128), from(BITS_MAX_I128)) == LT,
             5
         );
         assert!(
-            cmp(from(MAX_AS_U128), neg_from(MIN_AS_U128)) == GT,
+            cmp(from(BITS_MAX_I128), neg_from(BITS_MIN_I128)) == GT,
             6
         );
 
@@ -236,8 +242,8 @@ module move_int::i128_test {
         assert!(eq(max(from(1), from(2)), from(2)), 13);
         assert!(
             eq(
-                max(from(MAX_AS_U128), from(0)),
-                from(MAX_AS_U128)
+                max(from(BITS_MAX_I128), from(0)),
+                from(BITS_MAX_I128)
             ),
             14
         );
@@ -276,7 +282,7 @@ module move_int::i128_test {
             4
         );
         assert!(
-            as_u128(or(from(MAX_AS_U128), from(0))) == MAX_AS_U128,
+            as_u128(or(from(BITS_MAX_I128), from(0))) == BITS_MAX_I128,
             5
         );
     }
@@ -285,8 +291,8 @@ module move_int::i128_test {
     #[test]
     fun test_helper_functions() {
         // Test abs/abs_u128
-        assert!(as_u128(abs(from(10))) == 10, 0);
-        assert!(as_u128(abs(neg_from(10))) == 10, 1);
+        assert!(abs_u128(abs(from(10))) == 10, 0);
+        assert!(abs_u128(abs(neg_from(10))) == 10, 1);
         assert!(abs_u128(from(10)) == 10, 2);
         assert!(abs_u128(neg_from(10)) == 10, 3);
 
@@ -301,6 +307,6 @@ module move_int::i128_test {
     #[test]
     #[expected_failure(abort_code = 0, location = move_int::i128)]
     fun test_abs_overflow() {
-        abs(neg_from(MIN_AS_U128));
+        abs(neg_from(BITS_MIN_I128));
     }
 }

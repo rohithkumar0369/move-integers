@@ -1,14 +1,14 @@
 #[test_only]
 module move_int::i64_test {
     use move_int::i64::{as_u64, from, from_u64, neg_from, abs, abs_u64,
-        add, sub, mul, div, wrapping_add, wrapping_sub, pow, sign, cmp,
+        add, sub, mul, div, mod, wrapping_add, wrapping_sub, pow, sign, cmp,
         min, max, eq, gt, lt, gte, lte, and, or, is_zero, is_neg, zero
     };
 
     // Constants for testing
     const OVERFLOW: u64 = 0;
-    const MIN_AS_U64: u64 = 1 << 63;
-    const MAX_AS_U64: u64 = 0x7fffffffffffffff;
+    const BITS_MIN_I64: u64 = 1 << 63;
+    const BITS_MAX_I64: u64 = 0x7fffffffffffffff;
     const LT: u8 = 0;
     const EQ: u8 = 1;
     const GT: u8 = 2;
@@ -25,22 +25,22 @@ module move_int::i64_test {
         // Test from()
         assert!(as_u64(from(0)) == 0, 3);
         assert!(as_u64(from(10)) == 10, 4);
-        assert!(as_u64(from(MAX_AS_U64)) == MAX_AS_U64, 5);
+        assert!(as_u64(from(BITS_MAX_I64)) == BITS_MAX_I64, 5);
 
         // Test from_u64()
         assert!(as_u64(from_u64(42)) == 42, 6);
-        assert!(as_u64(from_u64(MIN_AS_U64)) == MIN_AS_U64, 7);
+        assert!(as_u64(from_u64(BITS_MIN_I64)) == BITS_MIN_I64, 7);
 
         // Test neg_from()
         assert!(as_u64(neg_from(0)) == 0, 8);
         assert!(as_u64(neg_from(1)) == 0xffffffffffffffff, 9);
-        assert!(as_u64(neg_from(MIN_AS_U64)) == MIN_AS_U64, 10);
+        assert!(as_u64(neg_from(BITS_MIN_I64)) == BITS_MIN_I64, 10);
     }
 
     #[test]
     #[expected_failure(abort_code = 0, location = move_int::i64)]
     fun test_from_overflow() {
-        from(MIN_AS_U64);
+        from(BITS_MIN_I64);
     }
 
     #[test]
@@ -58,7 +58,7 @@ module move_int::i64_test {
             0
         );
         assert!(
-            as_u64(wrapping_add(from(MAX_AS_U64), from(1))) == MIN_AS_U64,
+            as_u64(wrapping_add(from(BITS_MAX_I64), from(1))) == BITS_MIN_I64,
             1
         );
 
@@ -89,30 +89,42 @@ module move_int::i64_test {
             as_u64(div(from(100), neg_from(10))) == as_u64(neg_from(10)),
             9
         );
+
+        // Test mod
+        assert!(eq(mod(neg_from(3), from(3)), zero()), 10);
+        assert!(eq(mod(neg_from(4), from(3)), neg_from(1)), 11);
+        assert!(eq(mod(neg_from(5), from(3)), neg_from(2)), 12);
+        assert!(eq(mod(neg_from(6), from(3)), zero()), 13);
     }
 
     #[test]
     #[expected_failure(abort_code = 0, location = move_int::i64)]
     fun test_add_overflow() {
-        add(from(MAX_AS_U64), from(1));
+        add(from(BITS_MAX_I64), from(1));
     }
 
     #[test]
     #[expected_failure(abort_code = 0, location = move_int::i64)]
     fun test_sub_underflow() {
-        sub(neg_from(MIN_AS_U64), from(1));
+        sub(neg_from(BITS_MIN_I64), from(1));
     }
 
     #[test]
     #[expected_failure(abort_code = 0, location = move_int::i64)]
-    fun test_mul_overflow() {
-        mul(from(MAX_AS_U64), from(2));
+    fun test_mul_positive_overflow() {
+        mul(from(BITS_MAX_I64), from(BITS_MAX_I64));
+    }
+
+    #[test]
+    #[expected_failure(abort_code = 0, location = move_int::i64)]
+    fun test_mul_negative_overflow() {
+        mul(from(BITS_MIN_I64), from(BITS_MAX_I64));
     }
 
     #[test]
     #[expected_failure(abort_code = 1, location = move_int::i64)]
     fun test_division_by_zero() {
-        div(from(MAX_AS_U64), from(0));
+        div(from(BITS_MAX_I64), from(0));
     }
 
     // === Advanced Math Operation Tests ===
@@ -218,25 +230,26 @@ module move_int::i64_test {
     #[test]
     fun test_helper_functions() {
         // Test abs/abs_u64
-        assert!(as_u64(abs(from(10))) == 10, 0);
-        assert!(as_u64(abs(neg_from(10))) == 10, 1);
+        assert!(abs_u64(abs(from(10))) == 10, 0);
+        assert!(abs_u64(abs(neg_from(10))) == 10, 1);
         assert!(abs_u64(from(10)) == 10, 2);
         assert!(abs_u64(neg_from(10)) == 10, 3);
+        assert!(abs_u64(neg_from(BITS_MIN_I64)) == BITS_MIN_I64, 4);
 
         // Test sign and is_neg
-        assert!(sign(neg_from(10)) == 1, 4);
-        assert!(sign(from(10)) == 0, 5);
-        assert!(is_neg(neg_from(1)), 6);
-        assert!(!is_neg(from(1)), 7);
+        assert!(sign(neg_from(10)) == 1, 5);
+        assert!(sign(from(10)) == 0, 6);
+        assert!(is_neg(neg_from(1)), 7);
+        assert!(!is_neg(from(1)), 8);
 
         // Test min/max
-        assert!(eq(min(from(10), from(5)), from(5)), 8);
-        assert!(eq(max(from(10), from(5)), from(10)), 9);
+        assert!(eq(min(from(10), from(5)), from(5)), 9);
+        assert!(eq(max(from(10), from(5)), from(10)), 10);
     }
 
     #[test]
     #[expected_failure(abort_code = 0, location = move_int::i64)]
     fun test_abs_overflow() {
-        abs(neg_from(MIN_AS_U64));
+        abs(neg_from(BITS_MIN_I64));
     }
 }

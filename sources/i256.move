@@ -2,9 +2,11 @@ module move_int::i256 {
     const OVERFLOW: u64 = 0;
     const DIVISION_BY_ZERO: u64 = 1;
 
-    const MIN_AS_U256: u256 = 1 << 255;
-    const MAX_AS_U256: u256 =
+    const BITS_MIN_I256: u256 = 1 << 255;
+    const BITS_MAX_I256: u256 =
         0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
+
+    const MASK_U256: u256 = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
 
     const LT: u8 = 0;
     const EQ: u8 = 1;
@@ -14,24 +16,14 @@ module move_int::i256 {
         bits: u256
     }
 
-    public fun zero(): I256 {
-        I256 { bits: 0 }
-    }
-
     public fun from(v: u256): I256 {
-        assert!(v <= MAX_AS_U256, OVERFLOW);
+        assert!(v <= BITS_MAX_I256, OVERFLOW);
         I256 { bits: v }
     }
 
     public fun neg_from(v: u256): I256 {
-        assert!(v <= MIN_AS_U256, OVERFLOW);
-        if (v == 0) {
-            I256 { bits: v }
-        } else {
-            I256 {
-                bits: (u256_neg(v) + 1) | (1 << 255)
-            }
-        }
+        assert!(v <= BITS_MIN_I256, OVERFLOW);
+        I256 { bits: twos_complement(v) }
     }
 
     public fun neg(v: I256): I256 {
@@ -41,6 +33,7 @@ module move_int::i256 {
         }
     }
 
+    /// Note: implementation is not performant
     public fun wrapping_add(num1: I256, num2: I256): I256 {
         let sum = num1.bits ^ num2.bits;
         let carry = (num1.bits & num2.bits) << 1;
@@ -54,81 +47,74 @@ module move_int::i256 {
     }
 
     public fun add(num1: I256, num2: I256): I256 {
-        let sum = wrapping_add(num1, num2);
-        let overflow =
-            (sign(num1) & sign(num2) & u8_neg(sign(sum)))
-                + (u8_neg(sign(num1)) & u8_neg(sign(num2)) & sign(sum));
-        assert!(overflow == 0, OVERFLOW);
+        let (sum, overflow) = overflowing_add(num1, num2);
+        assert!(!overflow, OVERFLOW);
         sum
     }
 
     public fun overflowing_add(num1: I256, num2: I256): (I256, bool) {
         let sum = wrapping_add(num1, num2);
-        let overflow =
-            (sign(num1) & sign(num2) & u8_neg(sign(sum)))
-                + (u8_neg(sign(num1)) & u8_neg(sign(num2)) & sign(sum));
-        (sum, overflow != 0)
+        let is_num1_neg = is_neg(num1);
+        let is_num2_neg = is_neg(num2);
+        let is_sum_neg = is_neg(sum);
+        let overflow = (is_num1_neg && is_num2_neg && !is_sum_neg) || (!is_num1_neg && !is_num2_neg && is_sum_neg);
+        (sum, overflow)
     }
 
     public fun wrapping_sub(num1: I256, num2: I256): I256 {
-        let sub_num = wrapping_add(I256 { bits: u256_neg(num2.bits) }, from(1));
-        wrapping_add(num1, sub_num)
+        wrapping_add(num1, I256 { bits: twos_complement(num2.bits) })
     }
 
     public fun sub(num1: I256, num2: I256): I256 {
-        let sub_num = wrapping_add(I256 { bits: u256_neg(num2.bits) }, from(1));
-        add(num1, sub_num)
+        add(num1, I256 { bits: twos_complement(num2.bits) })
     }
 
     public fun overflowing_sub(num1: I256, num2: I256): (I256, bool) {
-        let sub_num = wrapping_add(I256 { bits: u256_neg(num2.bits) }, from(1));
-        let sum = wrapping_add(num1, sub_num);
-        let overflow =
-            (sign(num1) & sign(sub_num) & u8_neg(sign(sum)))
-                + (u8_neg(sign(num1)) & u8_neg(sign(sub_num)) & sign(sum));
-        (sum, overflow != 0)
+        let sub_num = I256 { bits: twos_complement(num2.bits) };
+        overflowing_add(num1, sub_num)
     }
 
     public fun mul(num1: I256, num2: I256): I256 {
         let product = abs_u256(num1) * abs_u256(num2);
         if (sign(num1) != sign(num2)) {
-            return neg_from(product)
-        };
-        return from(product)
+            neg_from(product)
+        } else {
+            from(product)
+        }
     }
 
     public fun div(num1: I256, num2: I256): I256 {
         assert!(!is_zero(num2), DIVISION_BY_ZERO);
         let result = abs_u256(num1) / abs_u256(num2);
-        if (sign(num1) != sign(num2)) {
-            return neg_from(result)
-        };
-        return from(result)
+        if (sign(num1) != sign(num2)) neg_from(result)
+        else from(result)
+    }
+
+    public fun mod(num1: I256, num2: I256): I256 {
+        let quotient = div(num1, num2);
+        sub(num1, mul(num2, quotient))
     }
 
     public fun abs(v: I256): I256 {
-        if (sign(v) == 0) { v }
+        let bits = if (sign(v) == 0) { v.bits }
         else {
-            assert!(v.bits > MIN_AS_U256, OVERFLOW);
-            I256 { bits: u256_neg(v.bits - 1) }
-        }
+            assert!(v.bits > BITS_MIN_I256, OVERFLOW);
+            twos_complement(v.bits)
+        };
+        I256 { bits }
     }
 
     public fun abs_u256(v: I256): u256 {
-        if (sign(v) == 0) { v.bits }
-        else {
-            u256_neg(v.bits - 1)
-        }
+        if (sign(v) == 0) v.bits
+        else twos_complement(v.bits)
     }
 
     public fun min(a: I256, b: I256): I256 {
-        if (lt(a, b)) { a }
-        else { b }
+        if (lt(a, b)) a else b
     }
 
     public fun max(a: I256, b: I256): I256 {
-        if (gt(a, b)) { a }
-        else { b }
+        if (gt(a, b)) a else b
     }
 
     public fun pow(base: I256, exponent: u64): I256 {
@@ -150,8 +136,19 @@ module move_int::i256 {
         v.bits == 0
     }
 
+    /// Creates and returns an I256 representing zero
+    public fun zero(): I256 {
+        I256 { bits: 0 }
+    }
+
+    /// Creates an I256 from a u256 without any checks
+    public fun pack(v: u256): I256 {
+        I256 { bits: v }
+    }
+
+    #[deprecated]
     public fun as_u256(v: I256): u256 {
-        v.bits
+        unpack(v)
     }
 
     public fun sign(v: I256): u8 {
@@ -164,8 +161,10 @@ module move_int::i256 {
 
     public fun cmp(num1: I256, num2: I256): u8 {
         if (num1.bits == num2.bits) return EQ;
-        if (sign(num1) > sign(num2)) return LT;
-        if (sign(num1) < sign(num2)) return GT;
+        let sign1 = sign(num1);
+        let sign2 = sign(num2);
+        if (sign1 > sign2) return LT;
+        if (sign1 < sign2) return GT;
         if (num1.bits > num2.bits) {
             return GT
         } else {
@@ -174,7 +173,7 @@ module move_int::i256 {
     }
 
     public fun eq(num1: I256, num2: I256): bool {
-        num1.bits == num2.bits
+        cmp(num1, num2) == EQ
     }
 
     public fun gt(num1: I256, num2: I256): bool {
@@ -193,20 +192,26 @@ module move_int::i256 {
         cmp(num1, num2) <= EQ
     }
 
+    #[deprecated]
     public fun or(num1: I256, num2: I256): I256 {
         I256 { bits: (num1.bits | num2.bits) }
     }
 
+    #[deprecated]
     public fun and(num1: I256, num2: I256): I256 {
         I256 { bits: (num1.bits & num2.bits) }
     }
 
-    fun u256_neg(v: u256): u256 {
-        v
-            ^ 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    /// Get internal bits of I256
+    public fun unpack(v: I256): u256 {
+        v.bits
     }
 
-    fun u8_neg(v: u8): u8 {
-        v ^ 0xff
+    /// Two's complement in order to dervie negative representation of bits
+    /// It is overflow-proof because we hardcode 2's complement of 0 to be 0
+    /// Which is fine for our specific use case
+    fun twos_complement(v: u256): u256 {
+        if (v == 0) 0
+        else (v ^ MASK_U256) + 1
     }
 }

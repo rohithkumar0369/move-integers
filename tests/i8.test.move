@@ -2,13 +2,13 @@
 module move_int::i8_test {
     use move_int::i8::{as_u8, from, from_u8, neg_from, abs, add, sub, mul,
         div, wrapping_sub, pow, sign, cmp, min, max, eq, gte, lte,
-        and, or, is_zero, is_neg, zero
+        and, or, is_zero, is_neg, zero, mod
     };
 
     // Constants for testing
     const OVERFLOW: u64 = 0;
-    const MIN_AS_U8: u8 = 1 << 7;
-    const MAX_AS_U8: u8 = 0x7f;
+    const BITS_MIN_I8: u8 = 1 << 7;
+    const BITS_MAX_I8: u8 = 0x7f;
     const LT: u8 = 0;
     const EQ: u8 = 1;
     const GT: u8 = 2;
@@ -25,7 +25,7 @@ module move_int::i8_test {
         // Test from()
         assert!(as_u8(from(0)) == 0, 3);
         assert!(as_u8(from(10)) == 10, 4);
-        assert!(as_u8(from(MAX_AS_U8)) == MAX_AS_U8, 5);
+        assert!(as_u8(from(BITS_MAX_I8)) == BITS_MAX_I8, 5);
 
         // Test from_u8()
         assert!(as_u8(from_u8(42)) == 42, 6);
@@ -35,20 +35,20 @@ module move_int::i8_test {
         // Test neg_from()
         assert!(as_u8(neg_from(0)) == 0, 9);
         assert!(as_u8(neg_from(1)) == 0xff, 10);
-        assert!(as_u8(neg_from(MAX_AS_U8)) == 0x81, 11);
-        assert!(as_u8(neg_from(MIN_AS_U8)) == MIN_AS_U8, 12);
+        assert!(as_u8(neg_from(BITS_MAX_I8)) == 0x81, 11);
+        assert!(as_u8(neg_from(BITS_MIN_I8)) == BITS_MIN_I8, 12);
     }
 
     #[test]
     #[expected_failure(abort_code = 0, location = move_int::i8)]
     fun test_from_overflow() {
-        from(MAX_AS_U8 + 1);
+        from(BITS_MAX_I8 + 1);
     }
 
     #[test]
     #[expected_failure(abort_code = 0, location = move_int::i8)]
     fun test_neg_from_overflow() {
-        neg_from(MIN_AS_U8 + 1);
+        neg_from(BITS_MIN_I8 + 1);
     }
 
     // === Arithmetic Operation Tests ===
@@ -57,7 +57,7 @@ module move_int::i8_test {
         // Test add/sub
         assert!(as_u8(add(from(1), from(2))) == 3, 0);
         assert!(
-            as_u8(add(from(MAX_AS_U8), from(0))) == MAX_AS_U8,
+            as_u8(add(from(BITS_MAX_I8), from(0))) == BITS_MAX_I8,
             1
         );
         assert!(as_u8(add(neg_from(1), from(1))) == 0, 2);
@@ -99,30 +99,36 @@ module move_int::i8_test {
             as_u8(div(neg_from(6), neg_from(2))) == 3,
             13
         );
+
+        // Test mod
+        assert!(eq(mod(neg_from(3), from(3)), zero()), 14);
+        assert!(eq(mod(neg_from(4), from(3)), neg_from(1)), 15);
+        assert!(eq(mod(neg_from(5), from(3)), neg_from(2)), 16);
+        assert!(eq(mod(neg_from(6), from(3)), zero()), 17);
     }
 
     #[test]
     #[expected_failure(abort_code = 0, location = move_int::i8)]
     fun test_add_overflow() {
-        add(from(MAX_AS_U8), from(1));
+        add(from(BITS_MAX_I8), from(1));
     }
 
     #[test]
     #[expected_failure(abort_code = 0, location = move_int::i8)]
     fun test_add_underflow() {
-        add(neg_from(MIN_AS_U8), neg_from(1));
+        add(neg_from(BITS_MIN_I8), neg_from(1));
     }
 
     #[test]
     #[expected_failure(abort_code = 0, location = move_int::i8)]
     fun test_sub_overflow() {
-        sub(from(MAX_AS_U8), neg_from(1));
+        sub(from(BITS_MAX_I8), neg_from(1));
     }
 
     #[test]
     #[expected_failure(abort_code = 0, location = move_int::i8)]
     fun test_sub_underflow() {
-        sub(neg_from(MIN_AS_U8), from(1));
+        sub(neg_from(BITS_MIN_I8), from(1));
     }
 
     #[test]
@@ -164,7 +170,7 @@ module move_int::i8_test {
         assert!(cmp(neg_from(1), from(0)) == LT, 3);
         assert!(cmp(from(0), neg_from(1)) == GT, 4);
         assert!(
-            cmp(neg_from(MIN_AS_U8), from(MAX_AS_U8)) == LT,
+            cmp(neg_from(BITS_MIN_I8), from(BITS_MAX_I8)) == LT,
             5
         );
 
@@ -181,13 +187,13 @@ module move_int::i8_test {
             7
         );
         assert!(
-            eq(min(from(MAX_AS_U8), from(0)), from(0)),
+            eq(min(from(BITS_MAX_I8), from(0)), from(0)),
             8
         );
         assert!(
             eq(
-                min(neg_from(MIN_AS_U8), from(0)),
-                neg_from(MIN_AS_U8)
+                min(neg_from(BITS_MIN_I8), from(0)),
+                neg_from(BITS_MIN_I8)
             ),
             9
         );
@@ -206,14 +212,14 @@ module move_int::i8_test {
         );
         assert!(
             eq(
-                max(from(MAX_AS_U8), from(0)),
-                from(MAX_AS_U8)
+                max(from(BITS_MAX_I8), from(0)),
+                from(BITS_MAX_I8)
             ),
             12
         );
         assert!(
             eq(
-                max(neg_from(MIN_AS_U8), from(0)),
+                max(neg_from(BITS_MIN_I8), from(0)),
                 from(0)
             ),
             13
@@ -265,6 +271,6 @@ module move_int::i8_test {
     #[test]
     #[expected_failure(abort_code = 0, location = move_int::i8)]
     fun test_abs_overflow() {
-        abs(neg_from(MIN_AS_U8));
+        abs(neg_from(BITS_MIN_I8));
     }
 }

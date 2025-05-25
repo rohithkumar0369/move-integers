@@ -2,13 +2,13 @@
 module move_int::i16_test {
     use move_int::i16::{as_u16, from, from_u16, neg_from, abs, add,
         sub, mul, div, wrapping_add, wrapping_sub, pow, sign, cmp,
-        min, max, eq, gte, lte, and, or, is_zero, is_neg, zero
+        min, max, eq, gte, lte, and, or, is_zero, is_neg, zero, mod
     };
 
     // Constants for testing
     const OVERFLOW: u64 = 0;
-    const MIN_AS_U16: u16 = 1 << 15;
-    const MAX_AS_U16: u16 = 0x7fff;
+    const BITS_MIN_I16: u16 = 1 << 15;
+    const BITS_MAX_I16: u16 = 0x7fff;
     const LT: u8 = 0;
     const EQ: u8 = 1;
     const GT: u8 = 2;
@@ -25,24 +25,24 @@ module move_int::i16_test {
         // Test from()
         assert!(as_u16(from(0)) == 0, 3);
         assert!(as_u16(from(10)) == 10, 4);
-        assert!(as_u16(from(MAX_AS_U16)) == MAX_AS_U16, 5);
+        assert!(as_u16(from(BITS_MAX_I16)) == BITS_MAX_I16, 5);
 
         // Test from_u16()
         assert!(as_u16(from_u16(42)) == 42, 6);
-        assert!(as_u16(from_u16(MIN_AS_U16)) == MIN_AS_U16, 7);
-        assert!(sign(from_u16(MIN_AS_U16)) == 1, 8);
+        assert!(as_u16(from_u16(BITS_MIN_I16)) == BITS_MIN_I16, 7);
+        assert!(sign(from_u16(BITS_MIN_I16)) == 1, 8);
 
         // Test neg_from()
         assert!(as_u16(neg_from(0)) == 0, 9);
         assert!(as_u16(neg_from(1)) == 0xffff, 10);
-        assert!(as_u16(neg_from(MIN_AS_U16)) == MIN_AS_U16, 11);
+        assert!(as_u16(neg_from(BITS_MIN_I16)) == BITS_MIN_I16, 11);
         assert!(as_u16(neg_from(0x7fff)) == 0x8001, 12);
     }
 
     #[test]
     #[expected_failure(abort_code = 0, location = move_int::i16)]
     fun test_from_overflow() {
-        from(MIN_AS_U16);
+        from(BITS_MIN_I16);
     }
 
     #[test]
@@ -60,7 +60,7 @@ module move_int::i16_test {
             0
         );
         assert!(
-            as_u16(wrapping_add(from(MAX_AS_U16), from(1))) == MIN_AS_U16,
+            as_u16(wrapping_add(from(BITS_MAX_I16), from(1))) == BITS_MIN_I16,
             1
         );
         assert!(
@@ -100,8 +100,8 @@ module move_int::i16_test {
             11
         );
         assert!(
-            as_u16(mul(from(MIN_AS_U16 / 2), neg_from(2)))
-                == as_u16(neg_from(MIN_AS_U16)),
+            as_u16(mul(from(BITS_MIN_I16 / 2), neg_from(2)))
+                == as_u16(neg_from(BITS_MIN_I16)),
             12
         );
 
@@ -115,30 +115,36 @@ module move_int::i16_test {
             as_u16(div(neg_from(10), neg_from(1))) == as_u16(from(10)),
             15
         );
+
+        // Test mod
+        assert!(eq(mod(neg_from(3), from(3)), zero()), 16);
+        assert!(eq(mod(neg_from(4), from(3)), neg_from(1)), 17);
+        assert!(eq(mod(neg_from(5), from(3)), neg_from(2)), 18);
+        assert!(eq(mod(neg_from(6), from(3)), zero()), 19);
     }
 
     #[test]
     #[expected_failure]
     fun test_add_overflow() {
-        add(from(MAX_AS_U16), from(1));
+        add(from(BITS_MAX_I16), from(1));
     }
 
     #[test]
     #[expected_failure]
     fun test_add_underflow() {
-        add(neg_from(MIN_AS_U16), neg_from(1));
+        add(neg_from(BITS_MIN_I16), neg_from(1));
     }
 
     #[test]
     #[expected_failure]
     fun test_sub_overflow() {
-        sub(from(MAX_AS_U16), neg_from(1));
+        sub(from(BITS_MAX_I16), neg_from(1));
     }
 
     #[test]
     #[expected_failure]
     fun test_sub_underflow() {
-        sub(neg_from(MIN_AS_U16), from(1));
+        sub(neg_from(BITS_MIN_I16), from(1));
     }
 
     #[test]
@@ -150,7 +156,7 @@ module move_int::i16_test {
     #[test]
     #[expected_failure(abort_code = 0, location = move_int::i16)]
     fun test_div_overflow() {
-        div(neg_from(MIN_AS_U16), neg_from(1));
+        div(neg_from(BITS_MIN_I16), neg_from(1));
     }
 
     // === Advanced Math Operation Tests ===
@@ -195,13 +201,13 @@ module move_int::i16_test {
             10
         );
         assert!(
-            eq(min(from(MAX_AS_U16), from(0)), from(0)),
+            eq(min(from(BITS_MAX_I16), from(0)), from(0)),
             11
         );
         assert!(
             eq(
-                min(neg_from(MIN_AS_U16), from(0)),
-                neg_from(MIN_AS_U16)
+                min(neg_from(BITS_MIN_I16), from(0)),
+                neg_from(BITS_MIN_I16)
             ),
             12
         );
@@ -224,14 +230,14 @@ module move_int::i16_test {
         );
         assert!(
             eq(
-                max(from(MAX_AS_U16), from(0)),
-                from(MAX_AS_U16)
+                max(from(BITS_MAX_I16), from(0)),
+                from(BITS_MAX_I16)
             ),
             16
         );
         assert!(
             eq(
-                max(neg_from(MIN_AS_U16), from(0)),
+                max(neg_from(BITS_MIN_I16), from(0)),
                 from(0)
             ),
             17
@@ -275,13 +281,13 @@ module move_int::i16_test {
         assert!(!is_neg(from(0)), 6);
 
         // Test edge cases
-        assert!(as_u16(from_u16(MAX_AS_U16)) == MAX_AS_U16, 7);
+        assert!(as_u16(from_u16(BITS_MAX_I16)) == BITS_MAX_I16, 7);
         assert!(as_u16(from_u16(0)) == 0, 8);
     }
 
     #[test]
     #[expected_failure]
     fun test_abs_overflow() {
-        abs(neg_from(MIN_AS_U16));
+        abs(neg_from(BITS_MIN_I16));
     }
 }

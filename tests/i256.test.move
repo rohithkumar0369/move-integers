@@ -1,13 +1,13 @@
 #[test_only]
 module move_int::i256_test {
     use move_int::i256::{as_u256, from, neg_from, abs, add, sub, mul,
-        div, wrapping_add, wrapping_sub, overflowing_add, overflowing_sub, pow, neg, sign,
+        div, mod, wrapping_add, wrapping_sub, overflowing_add, overflowing_sub, pow, neg, sign,
         cmp, min, max, eq, gt, lt, gte, lte, and, or, is_zero, is_neg, zero
     };
 
     // Constants for testing
-    const MIN_AS_U256: u256 = 1 << 255;
-    const MAX_AS_U256: u256 =
+    const BITS_MIN_I256: u256 = 1 << 255;
+    const BITS_MAX_I256: u256 =
         0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
     const LT: u8 = 0;
     const EQ: u8 = 1;
@@ -25,7 +25,7 @@ module move_int::i256_test {
         // Test from()
         assert!(as_u256(from(0)) == 0, 3);
         assert!(as_u256(from(10)) == 10, 4);
-        assert!(as_u256(from(MAX_AS_U256)) == MAX_AS_U256, 5);
+        assert!(as_u256(from(BITS_MAX_I256)) == BITS_MAX_I256, 5);
 
         // Test neg_from()
         assert!(as_u256(neg_from(0)) == 0, 6);
@@ -35,7 +35,7 @@ module move_int::i256_test {
                 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
             7
         );
-        assert!(as_u256(neg_from(MIN_AS_U256)) == MIN_AS_U256, 8);
+        assert!(as_u256(neg_from(BITS_MIN_I256)) == BITS_MIN_I256, 8);
 
         // Test neg()
         assert!(eq(neg(from(5)), neg_from(5)), 9);
@@ -46,7 +46,7 @@ module move_int::i256_test {
     #[test]
     #[expected_failure(abort_code = 0, location = move_int::i256)]
     fun test_from_overflow() {
-        from(MIN_AS_U256);
+        from(BITS_MIN_I256);
     }
 
     #[test]
@@ -67,8 +67,8 @@ module move_int::i256_test {
         );
         assert!(
             as_u256(
-                wrapping_add(from(MAX_AS_U256), from(1))
-            ) == MIN_AS_U256,
+                wrapping_add(from(BITS_MAX_I256), from(1))
+            ) == BITS_MIN_I256,
             1
         );
         assert!(
@@ -82,26 +82,32 @@ module move_int::i256_test {
 
         // Test overflowing operations
         let (result, overflow) = overflowing_add(
-            from(MAX_AS_U256), neg_from(1)
+            from(BITS_MAX_I256), neg_from(1)
         );
         assert!(
-            !overflow && as_u256(result) == MAX_AS_U256 - 1,
+            !overflow && as_u256(result) == BITS_MAX_I256 - 1,
             4
         );
-        let (_, overflow) = overflowing_add(from(MAX_AS_U256), from(1));
+        let (_, overflow) = overflowing_add(from(BITS_MAX_I256), from(1));
         assert!(overflow, 5);
 
-        let (result, overflow) = overflowing_sub(from(MAX_AS_U256), from(1));
+        let (result, overflow) = overflowing_sub(from(BITS_MAX_I256), from(1));
         assert!(
-            !overflow && as_u256(result) == MAX_AS_U256 - 1,
+            !overflow && as_u256(result) == BITS_MAX_I256 - 1,
             6
         );
-        let (_, overflow) = overflowing_sub(neg_from(MIN_AS_U256), from(1));
+        let (_, overflow) = overflowing_sub(neg_from(BITS_MIN_I256), from(1));
         assert!(overflow, 7);
 
         // Test standard operations
         assert!(as_u256(add(from(15), from(25))) == 40, 8);
         assert!(as_u256(sub(from(25), from(15))) == 10, 9);
+
+        // Test mod
+        assert!(eq(mod(neg_from(3), from(3)), zero()), 10);
+        assert!(eq(mod(neg_from(4), from(3)), neg_from(1)), 11);
+        assert!(eq(mod(neg_from(5), from(3)), neg_from(2)), 12);
+        assert!(eq(mod(neg_from(6), from(3)), zero()), 13);
     }
 
     // === Multiplication and Division Tests ===
@@ -122,8 +128,8 @@ module move_int::i256_test {
         assert!(as_u256(mul(from(0), from(10))) == 0, 3);
         assert!(as_u256(mul(from(10), from(0))) == 0, 4);
         assert!(
-            as_u256(mul(from(MIN_AS_U256 / 2), neg_from(2)))
-                == as_u256(neg_from(MIN_AS_U256)),
+            as_u256(mul(from(BITS_MIN_I256 / 2), neg_from(2)))
+                == as_u256(neg_from(BITS_MIN_I256)),
             5
         );
 
@@ -138,7 +144,7 @@ module move_int::i256_test {
             8
         );
         assert!(
-            as_u256(div(neg_from(MIN_AS_U256), from(1))) == MIN_AS_U256,
+            as_u256(div(neg_from(BITS_MIN_I256), from(1))) == BITS_MIN_I256,
             9
         );
     }
@@ -146,44 +152,44 @@ module move_int::i256_test {
     #[test]
     #[expected_failure(abort_code = 0, location = move_int::i256)]
     fun test_mul_overflow() {
-        mul(from(MIN_AS_U256 / 2), from(3));
+        mul(from(BITS_MIN_I256 / 2), from(3));
     }
 
     #[test]
     #[expected_failure(abort_code = 0, location = move_int::i256)]
     fun test_mul_overflow_negative() {
-        mul(neg_from(MIN_AS_U256 / 2), neg_from(2));
+        mul(neg_from(BITS_MIN_I256 / 2), neg_from(2));
     }
 
     #[test]
     #[expected_failure(abort_code = 0, location = move_int::i256)]
     fun test_div_overflow() {
-        div(neg_from(MIN_AS_U256), neg_from(1));
+        div(neg_from(BITS_MIN_I256), neg_from(1));
     }
 
     // === Overflow Tests ===
     #[test]
     #[expected_failure(abort_code = 0, location = move_int::i256)]
     fun test_add_overflow() {
-        add(from(MAX_AS_U256), from(1));
+        add(from(BITS_MAX_I256), from(1));
     }
 
     #[test]
     #[expected_failure(abort_code = 0, location = move_int::i256)]
     fun test_add_underflow() {
-        add(neg_from(MIN_AS_U256), neg_from(1));
+        add(neg_from(BITS_MIN_I256), neg_from(1));
     }
 
     #[test]
     #[expected_failure(abort_code = 0, location = move_int::i256)]
     fun test_sub_overflow() {
-        sub(from(MAX_AS_U256), neg_from(1));
+        sub(from(BITS_MAX_I256), neg_from(1));
     }
 
     #[test]
     #[expected_failure(abort_code = 0, location = move_int::i256)]
     fun test_sub_underflow() {
-        sub(neg_from(MIN_AS_U256), from(1));
+        sub(neg_from(BITS_MIN_I256), from(1));
     }
 
     // === Comparison Tests ===
@@ -231,13 +237,13 @@ module move_int::i256_test {
         );
         assert!(eq(min(from(1), from(2)), from(1)), 3);
         assert!(
-            eq(min(from(MAX_AS_U256), from(0)), from(0)),
+            eq(min(from(BITS_MAX_I256), from(0)), from(0)),
             4
         );
         assert!(
             eq(
-                min(neg_from(MIN_AS_U256), from(0)),
-                neg_from(MIN_AS_U256)
+                min(neg_from(BITS_MIN_I256), from(0)),
+                neg_from(BITS_MIN_I256)
             ),
             5
         );
@@ -255,8 +261,8 @@ module move_int::i256_test {
         assert!(eq(max(from(1), from(2)), from(2)), 9);
         assert!(
             eq(
-                max(from(MAX_AS_U256), from(0)),
-                from(MAX_AS_U256)
+                max(from(BITS_MAX_I256), from(0)),
+                from(BITS_MAX_I256)
             ),
             10
         );
@@ -289,7 +295,7 @@ module move_int::i256_test {
             4
         );
         assert!(
-            as_u256(or(from(MAX_AS_U256), from(0))) == MAX_AS_U256,
+            as_u256(or(from(BITS_MAX_I256), from(0))) == BITS_MAX_I256,
             5
         );
     }
@@ -321,7 +327,7 @@ module move_int::i256_test {
     #[test]
     #[expected_failure(abort_code = 0, location = move_int::i256)]
     fun test_abs_overflow() {
-        abs(neg_from(MIN_AS_U256));
+        abs(neg_from(BITS_MIN_I256));
     }
 
     #[test]
@@ -342,7 +348,7 @@ module move_int::i256_test {
     #[test]
     fun test_neg_from_edge_case() {
         // This creates an invalid state that should be caught
-        let _result = neg_from(MIN_AS_U256); // May create inconsistent representation
+        let _result = neg_from(BITS_MIN_I256); // May create inconsistent representation
     }
 
     // === Division Edge Cases ===
@@ -351,8 +357,8 @@ module move_int::i256_test {
     #[expected_failure(abort_code = 0, location = move_int::i256)]
     fun test_div_min_by_neg_one() {
         // Division of minimum negative value by -1 should overflow
-        // MIN_AS_U256 represents -2^255, dividing by -1 gives +2^255 which can't be represented
-        let min_neg = neg_from(MIN_AS_U256);
+        // BITS_MIN_I256 represents -2^255, dividing by -1 gives +2^255 which can't be represented
+        let min_neg = neg_from(BITS_MIN_I256);
         let neg_one = neg_from(1);
         div(min_neg, neg_one); // Should abort due to overflow
     }
@@ -360,7 +366,7 @@ module move_int::i256_test {
     #[test]
     fun test_div_edge_cases_that_work() {
         // These should work fine
-        let min_neg = neg_from(MIN_AS_U256);
+        let min_neg = neg_from(BITS_MIN_I256);
         let pos_one = from(1);
         let result = div(min_neg, pos_one);
         assert!(eq(result, min_neg), 0); // -MIN / 1 = -MIN
@@ -368,15 +374,15 @@ module move_int::i256_test {
         // Divide by 2
         let pos_two = from(2);
         let result2 = div(min_neg, pos_two);
-        assert!(as_u256(result2) != MIN_AS_U256, 1); // Should be half of min
+        assert!(as_u256(result2) != BITS_MIN_I256, 1); // Should be half of min
     }
 
     // === Comparison Logic Verification ===
 
     #[test]
     fun test_comparison_edge_cases() {
-        let min_neg = neg_from(MIN_AS_U256);  // Most negative value
-        let max_pos = from(MAX_AS_U256);      // Most positive value
+        let min_neg = neg_from(BITS_MIN_I256);  // Most negative value
+        let max_pos = from(BITS_MAX_I256);      // Most positive value
         let zero_val = zero();
         let neg_one = neg_from(1);
         let pos_one = from(1);
@@ -393,8 +399,8 @@ module move_int::i256_test {
         assert!(gt(pos_one, neg_one), 6);    // 1 > -1
 
         // Test boundary values
-        let almost_max = from(MAX_AS_U256 - 1);
-        let almost_min_abs = MIN_AS_U256 - 1;
+        let almost_max = from(BITS_MAX_I256 - 1);
+        let almost_min_abs = BITS_MIN_I256 - 1;
         let almost_min = neg_from(almost_min_abs);
 
         assert!(lt(almost_max, max_pos), 7);  // MAX-1 < MAX
@@ -405,13 +411,13 @@ module move_int::i256_test {
     fun test_cmp_function_comprehensive() {
         // Test all comparison cases systematically
         let values = vector[
-            neg_from(MIN_AS_U256),           // Most negative
+            neg_from(BITS_MIN_I256),           // Most negative
             neg_from(100),                   // Medium negative
             neg_from(1),                     // Small negative
             zero(),                          // Zero
             from(1),                         // Small positive
             from(100),                       // Medium positive
-            from(MAX_AS_U256)                // Most positive
+            from(BITS_MAX_I256)                // Most positive
         ];
 
         let i = 0;
@@ -470,7 +476,7 @@ module move_int::i256_test {
     #[expected_failure] // Should overflow
     fun test_pow_large_base() {
         // Large base with small exponent should overflow
-        let large_base = from(MAX_AS_U256 / 2);
+        let large_base = from(BITS_MAX_I256 / 2);
         pow(large_base, 3);
     }
 
@@ -489,7 +495,7 @@ module move_int::i256_test {
         assert!(eq(neg(zero()), zero()), 2);
 
         // Test negation of max positive
-        let max_pos = from(MAX_AS_U256);
+        let max_pos = from(BITS_MAX_I256);
         let neg_max = neg(max_pos);
         assert!(is_neg(neg_max), 3);
         assert!(eq(neg(neg_max), max_pos), 4);
@@ -499,7 +505,7 @@ module move_int::i256_test {
     #[expected_failure(abort_code = 0, location = move_int::i256)]
     fun test_neg_min_value() {
         // Negating the minimum value should overflow
-        let min_neg = neg_from(MIN_AS_U256);
+        let min_neg = neg_from(BITS_MIN_I256);
         neg(min_neg); // Should abort
     }
 
@@ -509,7 +515,7 @@ module move_int::i256_test {
     fun test_bitwise_edge_cases() {
         let all_ones = neg_from(1); // -1 in two's complement = all 1s
         let zero_val = zero();
-        let max_pos = from(MAX_AS_U256);
+        let max_pos = from(BITS_MAX_I256);
 
         // AND with all 1s should return the other value
         assert!(eq(and(max_pos, all_ones), max_pos), 0);
@@ -533,8 +539,8 @@ module move_int::i256_test {
     #[test]
     fun test_wrapping_vs_checked_consistency() {
         // Test that overflowing operations behave consistently
-        let max_pos = from(MAX_AS_U256);
-        let min_neg = neg_from(MIN_AS_U256);
+        let max_pos = from(BITS_MAX_I256);
+        let min_neg = neg_from(BITS_MIN_I256);
         let one = from(1);
 
         // Test overflowing_add
@@ -558,13 +564,13 @@ module move_int::i256_test {
     #[test]
     fun test_sign_detection_edge_cases() {
         // Test sign of boundary values
-        assert!(sign(from(MAX_AS_U256)) == 0, 0);    // Max positive
-        assert!(sign(neg_from(MIN_AS_U256)) == 1, 1); // Max negative
+        assert!(sign(from(BITS_MAX_I256)) == 0, 0);    // Max positive
+        assert!(sign(neg_from(BITS_MIN_I256)) == 1, 1); // Max negative
         assert!(sign(zero()) == 0, 2);                // Zero
 
         // Test is_neg
-        assert!(!is_neg(from(MAX_AS_U256)), 3);
-        assert!(is_neg(neg_from(MIN_AS_U256)), 4);
+        assert!(!is_neg(from(BITS_MAX_I256)), 3);
+        assert!(is_neg(neg_from(BITS_MIN_I256)), 4);
         assert!(!is_neg(zero()), 5);
 
         // Test is_zero
@@ -577,8 +583,8 @@ module move_int::i256_test {
 
     #[test]
     fun test_min_max_edge_cases() {
-        let max_pos = from(MAX_AS_U256);
-        let min_neg = neg_from(MIN_AS_U256);
+        let max_pos = from(BITS_MAX_I256);
+        let min_neg = neg_from(BITS_MIN_I256);
         let zero_val = zero();
 
         // Test with extreme values
