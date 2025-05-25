@@ -2,13 +2,13 @@
 module move_int::i32_test {
     use move_int::i32::{as_u32, from, from_u32, neg_from, abs, add, sub, mul,
         div, wrapping_add, wrapping_sub, pow, sign, cmp, min, max,
-        eq, gt, lt, gte, lte, and, or, is_zero, is_neg, zero
+        eq, gt, lt, gte, lte, and, or, is_zero, is_neg, zero, mod
     };
 
     // Constants for testing
     const OVERFLOW: u64 = 0;
-    const MIN_AS_U32: u32 = 1 << 31;
-    const MAX_AS_U32: u32 = 0x7fffffff;
+    const BITS_MIN_I32: u32 = 1 << 31;
+    const BITS_MAX_I32: u32 = 0x7fffffff;
     const LT: u8 = 0;
     const EQ: u8 = 1;
     const GT: u8 = 2;
@@ -25,24 +25,24 @@ module move_int::i32_test {
         // Test from()
         assert!(as_u32(from(0)) == 0, 3);
         assert!(as_u32(from(10)) == 10, 4);
-        assert!(as_u32(from(MAX_AS_U32)) == MAX_AS_U32, 5);
+        assert!(as_u32(from(BITS_MAX_I32)) == BITS_MAX_I32, 5);
 
         // Test from_u32()
         assert!(as_u32(from_u32(42)) == 42, 6);
-        assert!(as_u32(from_u32(MIN_AS_U32)) == MIN_AS_U32, 7);
-        assert!(sign(from_u32(MIN_AS_U32)) == 1, 8);
+        assert!(as_u32(from_u32(BITS_MIN_I32)) == BITS_MIN_I32, 7);
+        assert!(sign(from_u32(BITS_MIN_I32)) == 1, 8);
 
         // Test neg_from()
         assert!(as_u32(neg_from(0)) == 0, 9);
         assert!(as_u32(neg_from(1)) == 0xffffffff, 10);
-        assert!(as_u32(neg_from(MIN_AS_U32)) == MIN_AS_U32, 11);
+        assert!(as_u32(neg_from(BITS_MIN_I32)) == BITS_MIN_I32, 11);
         assert!(as_u32(neg_from(0x7fffffff)) == 0x80000001, 12);
     }
 
     #[test]
     #[expected_failure(abort_code = 0, location = move_int::i32)]
     fun test_from_overflow() {
-        from(MIN_AS_U32);
+        from(BITS_MIN_I32);
     }
 
     #[test]
@@ -60,13 +60,13 @@ module move_int::i32_test {
             0
         );
         assert!(
-            as_u32(wrapping_add(from(MAX_AS_U32), from(1))) == MIN_AS_U32,
+            as_u32(wrapping_add(from(BITS_MAX_I32), from(1))) == BITS_MIN_I32,
             1
         );
         assert!(
             as_u32(
-                wrapping_add(from(MAX_AS_U32 - 1), from(1))
-            ) == MAX_AS_U32,
+                wrapping_add(from(BITS_MAX_I32 - 1), from(1))
+            ) == BITS_MAX_I32,
             2
         );
 
@@ -96,8 +96,8 @@ module move_int::i32_test {
             10
         );
         assert!(
-            as_u32(mul(from(MIN_AS_U32 / 2), neg_from(2)))
-                == as_u32(neg_from(MIN_AS_U32)),
+            as_u32(mul(from(BITS_MIN_I32 / 2), neg_from(2)))
+                == as_u32(neg_from(BITS_MIN_I32)),
             11
         );
 
@@ -111,30 +111,36 @@ module move_int::i32_test {
             as_u32(div(neg_from(10), neg_from(1))) == 10,
             14
         );
+
+        // Test mod
+        assert!(eq(mod(neg_from(3), from(3)), zero()), 15);
+        assert!(eq(mod(neg_from(4), from(3)), neg_from(1)), 16);
+        assert!(eq(mod(neg_from(5), from(3)), neg_from(2)), 17);
+        assert!(eq(mod(neg_from(6), from(3)), zero()), 18);
     }
 
     #[test]
     #[expected_failure(abort_code = 0, location = move_int::i32)]
     fun test_add_overflow() {
-        add(from(MAX_AS_U32), from(1));
+        add(from(BITS_MAX_I32), from(1));
     }
 
     #[test]
     #[expected_failure(abort_code = 0, location = move_int::i32)]
     fun test_add_underflow() {
-        add(neg_from(MIN_AS_U32), neg_from(1));
+        add(neg_from(BITS_MIN_I32), neg_from(1));
     }
 
     #[test]
     #[expected_failure(abort_code = 0, location = move_int::i32)]
     fun test_sub_overflow() {
-        sub(from(MAX_AS_U32), neg_from(1));
+        sub(from(BITS_MAX_I32), neg_from(1));
     }
 
     #[test]
     #[expected_failure(abort_code = 0, location = move_int::i32)]
     fun test_sub_underflow() {
-        sub(neg_from(MIN_AS_U32), from(1));
+        sub(neg_from(BITS_MIN_I32), from(1));
     }
 
     #[test]
@@ -152,7 +158,7 @@ module move_int::i32_test {
     #[test]
     #[expected_failure(abort_code = 0, location = move_int::i32)]
     fun test_div_overflow() {
-        div(neg_from(MIN_AS_U32), neg_from(1));
+        div(neg_from(BITS_MIN_I32), neg_from(1));
     }
 
     // === Advanced Math Operation Tests ===
@@ -196,13 +202,13 @@ module move_int::i32_test {
             10
         );
         assert!(
-            eq(min(from(MAX_AS_U32), from(0)), from(0)),
+            eq(min(from(BITS_MAX_I32), from(0)), from(0)),
             11
         );
         assert!(
             eq(
-                min(neg_from(MIN_AS_U32), from(0)),
-                neg_from(MIN_AS_U32)
+                min(neg_from(BITS_MIN_I32), from(0)),
+                neg_from(BITS_MIN_I32)
             ),
             12
         );
@@ -225,14 +231,14 @@ module move_int::i32_test {
         );
         assert!(
             eq(
-                max(from(MAX_AS_U32), from(0)),
-                from(MAX_AS_U32)
+                max(from(BITS_MAX_I32), from(0)),
+                from(BITS_MAX_I32)
             ),
             16
         );
         assert!(
             eq(
-                max(neg_from(MIN_AS_U32), from(0)),
+                max(neg_from(BITS_MIN_I32), from(0)),
                 from(0)
             ),
             17
@@ -249,7 +255,7 @@ module move_int::i32_test {
         );
         assert!(as_u32(or(from(0), from(0))) == 0, 1);
         assert!(
-            as_u32(or(from(MAX_AS_U32), from(0))) == MAX_AS_U32,
+            as_u32(or(from(BITS_MAX_I32), from(0))) == BITS_MAX_I32,
             2
         );
 
@@ -292,6 +298,6 @@ module move_int::i32_test {
     #[test]
     #[expected_failure(abort_code = 0, location = move_int::i32)]
     fun test_abs_overflow() {
-        abs(neg_from(MIN_AS_U32));
+        abs(neg_from(BITS_MIN_I32));
     }
 }
