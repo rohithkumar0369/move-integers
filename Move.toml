@@ -4,9 +4,9 @@ version = "1.0.0"
 authors = ["0xAnto"]
 
 [addresses]
-move_int = "0xfff1e5bad5901cdb1c6755ece8603b992b3f0000a3e5b96d8d0bdc49d6433fff"
+move_int = "0x7214a94bc4147c8314852723757d01db96174b4eceaabcd16fe34232040d4d97"
 
-[dependencies.AptosFramework]
-git = "https://github.com/aptos-labs/aptos-framework.git"
-rev = "mainnet"
-subdir = "aptos-framework"
+[dependencies.SupraFramework]
+git = "https://github.com/Entropy-Foundation/aptos-core.git"
+rev = "dev"
+subdir = "aptos-move/framework/supra-framework"
