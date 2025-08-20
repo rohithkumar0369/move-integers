@@ -127,7 +127,7 @@ module move_int::i256 {
                 result = mul(result, base);
             };
             base = mul(base, base);
-            exponent >>= 1;
+            exponent = exponent >> 1;
         };
         result
     }

@@ -4,7 +4,7 @@ module move_int::i16 {
     const DIVISION_BY_ZERO: u64 = 1;
 
     /// min number that a I16 could represent = (1 followed by 15 0s) = 1 << 15
-    const BITS_MIN_I16: u16 = 1 << 15;
+    const BITS_MIN_I16: u16 = 32768;
 
     /// max number that a I16 could represent = (0 followed by 15 1s) = (1 << 15) - 1
     const BITS_MAX_I16: u16 = 0x7fff;
@@ -117,19 +117,19 @@ module move_int::i16 {
 
     /// Raises an I16 number to a u16 power
     public fun pow(base: I16, exponent: u16): I16 {
-        if (exponent == 0) {
-            return from(1)
+    if (exponent == 0) {
+        return from(1)
+    };
+    let result = from(1);
+    while (exponent > 0) {
+        if (exponent & 1 == 1) {
+            result = mul(result, base);
         };
-        let result = from(1);
-        while (exponent > 0) {
-            if (exponent & 1 == 1) {
-                result = mul(result, base);
-            };
-            base = mul(base, base);
-            exponent >>= 1;
-        };
-        result
-    }
+        base = mul(base, base);
+        exponent = exponent >> 1; // Changed from >>= to explicit assignment
+    };
+    result
+}
 
     /// Creates an I16 from a u16 without any checks
     public fun pack(v: u16): I16 {
